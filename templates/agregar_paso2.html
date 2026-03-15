@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Identificación</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <style>
+        /* --- BASE --- */
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* --- OVERLAY MÓVIL --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- ÁREA DE CONTENIDO --- */
+        .content-area {
+            margin-left: 280px;
+            padding: 40px;
+            transition: margin-left 0.4s;
+        }
+
+        /* --- ESTILOS DEL FORMULARIO (HEREDADOS DE HTML 1) --- */
+        body {
+            opacity: 0;
+            animation: fadeInPage 0.4s forwards;
+        }
+
+        @keyframes fadeInPage {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.07);
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #f0f0f0;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .step-item {
+            color: #bdc3c7;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-item.active {
+            color: #3498db;
+            position: relative;
+        }
+
+        .step-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #3498db;
+            border-radius: 2px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            color: #34495e;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #dcdde1;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid #f8f9fa;
+        }
+
+        /* Botón Anterior (Estilo del botón Volver de HTML 1) */
+        .btn-volver {
+            background: #f1f2f6;
+            color: #57606f;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        /* Botón Siguiente (Estilo del botón Verde de HTML 1) */
+        .btn-siguiente {
+            background: #27ae60;
+            color: white;
+            padding: 14px 35px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        .error-help {
+            color: #7f8c8d;
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: block;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 80px;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'flota' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+
+            <header style="margin-bottom: 35px;">
+                <h1 style="font-size: 2rem; color: #2c3e50; margin: 0; font-weight: 800; letter-spacing: -0.5px;">
+                    Registro Integral de Equipo</h1>
+                <p style="color: #7f8c8d; font-size: 1rem; margin-top: 5px;">Complete los datos técnicos de
+                    identificación del activo.</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert {{ 'alert-success' if category == 'success' else 'alert-danger' }}"
+                style="margin-bottom: 20px;">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="form-container">
+                <a href="{{ url_for('flota.gestion_flota') }}" class="header-link">
+                    <i class="fas fa-arrow-left"></i> Cancelar y Volver al listado
+                </a>
+                <div class="step-header">
+                    <div class="step-item">1. Datos Generales</div>
+                    <div class="step-item active">2. Identificación</div>
+                    <div class="step-item">3. Info. Mecánica</div>
+                </div>
+
+                <form action="{{ url_for('flota.agregar_paso2') }}" method="POST">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+
+                        <div class="form-group">
+                            <label>Placa / Matrícula</label>
+                            <input type="text" name="placa" class="form-control" style="text-transform: uppercase;"
+                                placeholder="Ej: ABC-1234" required>
+                            <small class="error-help">Identificador único vehicular.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Número de Motor</label>
+                            <input type="text" name="nro_motor" class="form-control" style="text-transform: uppercase;"
+                                placeholder="Ej: 1GZFE00123" pattern="^[A-Za-z\d]{6,20}$"
+                                title="El motor debe tener entre 6 y 20 caracteres alfanuméricos" maxlength="20"
+                                required>
+                            <small class="error-help">6 a 20 caracteres alfanuméricos.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Serial de Chasis (VIN)</label>
+                            <input type="text" name="serial_chasis" class="form-control"
+                                style="text-transform: uppercase;" placeholder="Ej: 2T1BU40E37C"
+                                pattern="^[A-Za-z\d]{5,20}$"
+                                title="El chasis debe tener entre 5 y 20 caracteres alfanuméricos" maxlength="20"
+                                required>
+                            <small class="error-help">Serial grabado en estructura.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Año de Fabricación</label>
+                            <input type="number" name="año_fabricacion" class="form-control" min="1900" max="2026"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <a href="{{ url_for('flota.agregar_paso1') }}" class="btn-volver">
+                            <span style="margin-right: 8px;"></span> Paso Anterior
+                        </a>
+                        <button type="submit" class="btn-siguiente">
+                            Siguiente Paso: Mecánica <span style="margin-left: 8px;"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

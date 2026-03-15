@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Editar Operador</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <style>
+        /* --- BASE --- */
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* --- OVERLAY MÓVIL --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- ÁREA DE CONTENIDO --- */
+        .content-area {
+            margin-left: 280px;
+            padding: 40px;
+            transition: margin-left 0.4s;
+        }
+
+        body {
+            opacity: 0;
+            animation: fadeInPage 0.4s forwards;
+        }
+
+        @keyframes fadeInPage {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.07);
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #f0f0f0;
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .stepper::before {
+            content: "";
+            position: absolute;
+            top: 17px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #dcdde1;
+            z-index: 1;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            z-index: 2;
+            background: white;
+        }
+
+        .step-counter {
+            width: 35px;
+            height: 35px;
+            background: #dcdde1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+            transition: 0.4s;
+        }
+
+        .step-item.active .step-counter {
+            background: #3498db;
+            box-shadow: 0 0 0 5px rgba(52, 152, 219, 0.2);
+        }
+
+        .step-item.completed .step-counter {
+            background: #27ae60;
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+
+        .step-item.active .step-label {
+            color: #2c3e50;
+        }
+
+        .grid-form {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            animation: fadeIn 0.5s;
+        }
+
+        .grid-form.active {
+            display: grid;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input,
+        select,
+        textarea {
+            padding: 12px 15px;
+            border: 2px solid #edf2f7;
+            border-radius: 10px;
+            outline: none;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: #3498db;
+            background: #f8fbff;
+        }
+
+        .section-title {
+            grid-column: span 2;
+            font-size: 1.1rem;
+            color: #2c3e50;
+            border-left: 5px solid #3498db;
+            padding-left: 15px;
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-container {
+            grid-column: span 2;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f1f1;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .btn-back-nav {
+            background: #f1f2f6;
+            color: #2c3e50;
+        }
+
+        .btn-next {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .btn-save {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-link {
+            text-decoration: none;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .phone-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .phone-container select {
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        small.info {
+            color: #7f8c8d;
+            display: block;
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+
+        /* --- ESTILOS DE LA TABLA (TEMA OSCURO) --- */
+        .table-card {
+            background: #2c3e50;
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 15px;
+        }
+
+        .dark-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #ecf0f1;
+            font-size: 0.85rem;
+            text-align: left;
+            margin: 0;
+        }
+
+        .dark-table th {
+            background: #1a252f;
+            color: #3498db;
+            padding: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #34495e;
+            white-space: nowrap;
+        }
+
+        .dark-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #34495e;
+            vertical-align: middle;
+        }
+
+        .dark-table tr {
+            transition: background 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dark-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dark-table tr.selected {
+            background: rgba(46, 204, 113, 0.1) !important;
+            outline: 2px solid #2ecc71 !important;
+            outline-offset: -2px;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);
+            transform: scale(1.005);
+            position: relative;
+            z-index: 10;
+        }
+
+        .dark-table tr.selected td {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+        }
+
+        .dark-table input[type="checkbox"] {
+            transform: scale(1.3);
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .status-operativo {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            border: 1px solid #2ecc71;
+        }
+
+        .status-mantenimiento {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+            border: 1px solid #f1c40f;
+        }
+
+        .status-fuera {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        .type-badge {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ecf0f1;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: block;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 80px;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'operadores' %}
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            <header style="margin-bottom: 35px;">
+                <h1 style="font-size: 2rem; color: #2c3e50; margin: 0; font-weight: 800; letter-spacing: -0.5px;">Editar
+                    Operador</h1>
+                <p style="color: #7f8c8d; font-size: 1rem; margin-top: 5px;">Modifique los datos del expediente del
+                    personal.</p>
+            </header>
+
+            <div class="form-container">
+                <a href="{{ url_for('operadores.index') }}" class="header-link">
+                    <i class="fas fa-arrow-left"></i> Volver al listado
+                </a>
+
+                <div class="stepper">
+                    <div class="step-item active" id="step-i-1">
+                        <div class="step-counter"><i class="fas fa-user"></i></div>
+                        <div class="step-label">Personales</div>
+                    </div>
+                    <div class="step-item" id="step-i-2">
+                        <div class="step-counter"><i class="fas fa-heartbeat"></i></div>
+                        <div class="step-label">Salud</div>
+                    </div>
+                    <div class="step-item" id="step-i-3">
+                        <div class="step-counter"><i class="fas fa-id-card"></i></div>
+                        <div class="step-label">Licencia</div>
+                    </div>
+                    <div class="step-item" id="step-i-4">
+                        <div class="step-counter"><i class="fas fa-truck-pickup"></i></div>
+                        <div class="step-label">Equipo</div>
+                    </div>
+                </div>
+
+                <form action="{{ url_for('operadores.editar', id=operador.id_operador) }}" method="POST"
+                    id="form-operador" enctype="multipart/form-data">
+                    <!-- Paso 1 -->
+                    <div class="grid-form active" id="step-1">
+                        <div class="form-group">
+                            <label>Cédula de Identidad (Número)</label>
+                            <div style="display: flex; gap: 8px;">
+                                <select name="tipo_cedula" id="tipo_cedula" style="width: 80px; flex-shrink: 0;"
+                                    required>
+                                    <option value="V-" {% if tipo_cedula=='V-' %}selected{% endif %}>V-</option>
+                                    <option value="E-" {% if tipo_cedula=='E-' %}selected{% endif %}>E-</option>
+                                </select>
+                                <input type="text" name="cedula" id="cedula" value="{{ cedula_num }}" pattern="\d{7,8}"
+                                    title="7 u 8 dígitos" placeholder="Ej: 12345678" required minlength="7"
+                                    maxlength="8" style="flex-grow: 1;">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-upload"></i> Cédula Escaneada</label>
+                            <input type="file" name="file_cedula" id="file_cedula" accept=".pdf,.jpg,.jpeg,.png">
+                            {% if operador.doc_cedula %}
+                            <small class="success-text" style="color: #27ae60; font-size: 0.75rem; margin-top: 5px;">
+                                <i class="fas fa-check-circle"></i> Archivo actual registrado.
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono de Contacto</label>
+                            <div class="phone-container">
+                                <select name="cod_telf" required>
+                                    <option value="">Cód.</option>
+                                    {% for cod in ['0412','0414','0424','0416','0426','0283'] %}
+                                    <option value="{{ cod }}" {% if cod_telf==cod %}selected{% endif %}>{{ cod }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <input type="text" name="num_telf" value="{{ num_telf }}" pattern="[0-9]{7}"
+                                    title="7 dígitos" maxlength="7" minlength="7" placeholder="0000000" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Nombres</label>
+                            <input type="text" name="nombres" id="nombres" value="{{ operador.nombres }}"
+                                pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, mín 3 caracteres"
+                                minlength="3" maxlength="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos</label>
+                            <input type="text" name="apellidos" id="apellidos" value="{{ operador.apellidos }}"
+                                pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ ]+" title="Solo letras y espacios, mín 3 caracteres"
+                                minlength="3" maxlength="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Edad</label>
+                            <input type="number" name="edad" id="edad" value="{{ operador.edad }}" min="18" max="60"
+                                required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Nivel de Instrucción</label>
+                            <select name="id_nivel_instruccion" id="nivel_estudio_select" required>
+                                <option value="">Seleccione...</option>
+                                {% for n in niveles %}
+                                <option value="{{ n.id }}" {% if operador.id_nivel_instruccion==n.id %}selected{% endif
+                                    %}>{{ n.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="btn-container">
+                            <span></span>
+                            <button type="button" class="btn btn-next" onclick="validateAndNext(1, 2)">Siguiente <i
+                                    class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Paso 2 -->
+                    <div class="grid-form" id="step-2">
+                        <div class="section-title"><i class="fas fa-notes-medical"></i> Certificado de Salud</div>
+                        <div class="form-group full-width">
+                            <label>Estado Actual</label>
+                            <select name="estado" required>
+                                <option value="OPERATIVO" {% if operador.estado=='OPERATIVO' %}selected{% endif %}>
+                                    OPERATIVO</option>
+                                <option value="DISPONIBLE" {% if operador.estado=='DISPONIBLE' %}selected{% endif %}>
+                                    DISPONIBLE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>T. de Sangre</label>
+                            <select name="tipo_sangre" id="tipo_sangre" required>
+                                <option value="">Seleccione...</option>
+                                {% for ts in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'] %}
+                                <option value="{{ ts }}" {% if operador.tipo_sangre==ts %}selected{% endif %}>{{ ts }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>C. de Salud</label>
+                            <select name="condicion_salud" id="condicion_salud" required>
+                                <option value="">Seleccione...</option>
+                                <option value="APTO" {% if operador.condicion_salud=='APTO' %}selected{% endif %}>APTO
+                                </option>
+                                <option value="APTO CON LIMITACIONES" {% if
+                                    operador.condicion_salud=='APTO CON LIMITACIONES' %}selected{% endif %}>APTO CON
+                                    LIMITACIONES</option>
+                                <option value="NO APTO" {% if operador.condicion_salud=='NO APTO' %}selected{% endif %}>
+                                    NO APTO</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Expedición</label>
+                            <input type="date" name="fecha_exp_salud" id="exp_salud"
+                                value="{{ operador.fecha_exp_salud if operador.fecha_exp_salud else '' }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Vencimiento</label>
+                            <input type="date" name="fecha_ven_salud" id="ven_salud"
+                                value="{{ operador.fecha_ven_salud if operador.fecha_ven_salud else '' }}" required>
+                        </div>
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-upload"></i> Certificado Médico Escaneado</label>
+                            <input type="file" name="file_certificado" id="file_certificado"
+                                accept=".pdf,.jpg,.jpeg,.png">
+                            {% if operador.doc_certificado %}
+                            <small style="color: #27ae60; font-size: 0.75rem; margin-top: 5px;">
+                                <i class="fas fa-check-circle"></i> Archivo actual registrado.
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="btn-container">
+                            <button type="button" class="btn btn-back-nav" onclick="goToStep(1)"><i
+                                    class="fas fa-chevron-left"></i> Anterior</button>
+                            <button type="button" class="btn btn-next" onclick="validateAndNext(2, 3)">Siguiente <i
+                                    class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Paso 3 -->
+                    <div class="grid-form" id="step-3">
+                        <div class="section-title"><i class="fas fa-id-badge"></i> Licencia de Conducir</div>
+                        <div class="form-group full-width">
+                            <label>Grado de Licencia</label>
+                            <select name="tipo_licencia" id="tipo_licencia">
+                                <option value="">No posee</option>
+                                <option value="PRIMERA" {% if operador.tipo_licencia=='PRIMERA' %}selected{% endif %}>
+                                    PRIMERA (1ra)</option>
+                                <option value="SEGUNDA" {% if operador.tipo_licencia=='SEGUNDA' %}selected{% endif %}>
+                                    SEGUNDA (2da)</option>
+                                <option value="TERCERA" {% if operador.tipo_licencia=='TERCERA' %}selected{% endif %}>
+                                    TERCERA (3ra)</option>
+                                <option value="CUARTA" {% if operador.tipo_licencia=='CUARTA' %}selected{% endif %}>
+                                    CUARTA (4ta)</option>
+                                <option value="QUINTA" {% if operador.tipo_licencia=='QUINTA' %}selected{% endif %}>
+                                    QUINTA (5ta)</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Estado de la Licencia</label>
+                            <select name="estado_licencia" id="estado_licencia" {% if not operador.tipo_licencia
+                                %}disabled{% endif %}>
+                                <option value="">Seleccione...</option>
+                                <option value="VIGENTE" {% if operador.estado_licencia=='VIGENTE' %}selected{% endif %}>
+                                    VIGENTE</option>
+                                <option value="VENCIDA" {% if operador.estado_licencia=='VENCIDA' %}selected{% endif %}>
+                                    VENCIDA</option>
+                                <option value="EN TRAMITE" {% if operador.estado_licencia=='EN TRAMITE' %}selected{%
+                                    endif %}>EN TRAMITE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Expedición</label>
+                            <input type="date" name="fecha_exp_licencia" id="exp_lic"
+                                value="{{ operador.fecha_exp_licencia if operador.fecha_exp_licencia else '' }}" {% if
+                                not operador.tipo_licencia %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Vencimiento</label>
+                            <input type="date" name="fecha_ven_licencia" id="ven_lic"
+                                value="{{ operador.fecha_ven_licencia if operador.fecha_ven_licencia else '' }}" {% if
+                                not operador.tipo_licencia %}disabled{% endif %}>
+                        </div>
+                        <div class="form-group full-width">
+                            <label><i class="fas fa-upload"></i> Licencia Escaneada</label>
+                            <input type="file" name="file_licencia" id="file_licencia" accept=".pdf,.jpg,.jpeg,.png" {%
+                                if not operador.tipo_licencia %}disabled{% endif %} {% if operador.tipo_licencia and not
+                                operador.doc_licencia %}required{% endif %}>
+                            {% if operador.doc_licencia %}
+                            <small style="color: #27ae60; font-size: 0.75rem; margin-top: 5px;">
+                                <i class="fas fa-check-circle"></i> Archivo actual registrado.
+                            </small>
+                            {% endif %}
+                        </div>
+                        <div class="btn-container">
+                            <button type="button" class="btn btn-back-nav" onclick="goToStep(2)"><i
+                                    class="fas fa-chevron-left"></i> Anterior</button>
+                            <button type="button" class="btn" onclick="validateAndNext(3, 4)">Siguiente <i
+                                    class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Paso 4 -->
+                    <div class="grid-form" id="step-4">
+                        <div class="section-title"><i class="fas fa-truck-pickup"></i> Asignación de Equipo</div>
+                        <div class="form-group full-width">
+                            <label>Maquinaria a Cargo (máximo 5)</label>
+                            <small class="info" style="margin-bottom: 10px; display: block;">Haga clic en una fila para
+                                seleccionar la unidad. Disponibilidad basada en la licencia del operador.</small>
+                            <div class="table-card" id="maq_grid_container">
+                                <table class="dark-table">
+                                    <tbody>
+                                        {% for m in maquinas %}
+                                        {% if m.estado == 'OPERATIVO' or m.id_maquinaria in asignadas_ids %}
+                                        <tr class="maq-row {% if m.id_maquinaria in asignadas_ids %}selected{% endif %}"
+                                            data-subtipo="{{ m.id_subtipo or 0 }}" onclick="toggleMaqRow(this)">
+                                            <td style="display: none;">
+                                                <input type="checkbox" name="id_maquinarias[]"
+                                                    value="{{ m.id_maquinaria }}" class="maq-checkbox" {% if
+                                                    m.id_maquinaria in asignadas_ids %}checked{% endif %}>
+                                            </td>
+                                            <td style="color: #7f8c8d;">#{{ m.id_maquinaria }}</td>
+                                            <td><span class="type-badge">{{ m.nombre_tipo or 'N/A' }}</span></td>
+                                            <td>
+                                                <strong style="color: #ecf0f1;">{{ m.nombre_marca or 'N/A'
+                                                    }}</strong><br>
+                                                <small style="color: #95a5a6;">{{ m.nombre_modelo or 'N/A' }}</small>
+                                            </td>
+                                            <td style="font-family: monospace; font-size: 0.95rem;">{{ m.placa }}</td>
+                                            <td>{{ m.año_fabricacion or 'N/A' }}</td>
+                                            <td>
+                                                <span class="status-badge 
+                                                    {% if m.estado == 'OPERATIVO' %}status-operativo
+                                                    {% elif m.estado == 'EN MANTENIMIENTO' %}status-mantenimiento
+                                                    {% else %}status-fuera{% endif %}">
+                                                    {{ m.estado or 'N/A' }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="btn-container">
+                            <button type="button" class="btn btn-back-nav" onclick="goToStep(3)"><i
+                                    class="fas fa-chevron-left"></i> Anterior</button>
+                            <button type="submit" class="btn btn-save">Guardar Cambios <i
+                                    class="fas fa-check-circle"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            if (sb) sb.classList.toggle('active');
+            if (overlay) overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                const sb = document.getElementById('mainSidebar');
+                const overlay = document.getElementById('overlay');
+                if (sb) sb.classList.remove('active');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+
+        function goToStep(s) {
+            document.querySelectorAll('.grid-form').forEach(f => f.classList.remove('active'));
+            document.getElementById('step-' + s).classList.add('active');
+            document.querySelectorAll('.step-item').forEach((item, idx) => {
+                const stepIdx = idx + 1;
+                item.classList.remove('active', 'completed');
+                if (stepIdx < s) item.classList.add('completed');
+                else if (stepIdx === s) item.classList.add('active');
+            });
+            window.scrollTo(0, 0);
+        }
+
+        function showInlineError(el, msg) {
+            clearInlineError(el);
+            const p = document.createElement('p');
+            p.className = 'inline-error-msg';
+            p.style.color = '#e74c3c';
+            p.style.fontSize = '0.75rem';
+            p.style.marginTop = '4px';
+            p.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + msg;
+            el.closest('.form-group').appendChild(p);
+        }
+
+        function clearInlineError(el) {
+            const existing = el.closest('.form-group').querySelector('.inline-error-msg');
+            if (existing) existing.remove();
+            el.style.borderColor = '#edf2f7';
+        }
+
+        function validateAndNext(curr, next) {
+            const container = document.getElementById('step-' + curr);
+            const inputs = container.querySelectorAll('input[required], select[required]');
+            let valid = true;
+
+            inputs.forEach(i => clearInlineError(i));
+            inputs.forEach(i => clearInlineError(i));
+            inputs.forEach(i => {
+                if (!i.value.trim() || !i.checkValidity()) {
+                    valid = false;
+                    i.style.borderColor = 'var(--error)';
+
+                    let msg = "Campo obligatorio";
+
+                    if (i.validity.patternMismatch && i.hasAttribute('title')) {
+                        msg = i.getAttribute('title');
+                    } else if (i.validity.rangeOverflow || i.validity.rangeUnderflow) {
+                        msg = "Valor fuera de los límites permitidos.";
+                    } else if (i.validity.valueMissing) {
+                        msg = "Este campo es obligatorio.";
+                    } else if (i.validationMessage && !i.validity.valueMissing) {
+                        msg = i.validationMessage;
+                    }
+
+                    showInlineError(i, msg);
+                }
+            });
+
+            if (curr === 1 && valid) {
+                const ced = document.getElementById('cedula');
+                if (ced.value.length < 7 || isNaN(ced.value)) {
+                    valid = false;
+                    showInlineError(ced, "Cédula inválida (Mínimo 7 números)");
+                }
+            }
+
+            if (curr === 2 && valid) {
+                const ts = document.getElementById('tipo_sangre');
+                const cs = document.getElementById('condicion_salud');
+                if (!ts.value) { valid = false; showInlineError(ts, "Debe seleccionar"); }
+                if (!cs.value) { valid = false; showInlineError(cs, "Debe seleccionar"); }
+
+                const expSalud = document.getElementById('exp_salud');
+                const venSalud = document.getElementById('ven_salud');
+                if (expSalud.value && venSalud.value) {
+                    const dExp = new Date(expSalud.value);
+                    const dVen = new Date(venSalud.value);
+                    const diffTime = dVen - dExp;
+                    const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+                    if (diffYears < 4.9) { // ~5 años
+                        valid = false;
+                        showInlineError(venSalud, "El certificado debe tener una vigencia mínima de 5 años.");
+                    } else if (dVen <= dExp) {
+                        valid = false;
+                        showInlineError(venSalud, "La fecha de vencimiento debe ser posterior.");
+                    }
+                }
+            }
+
+            if (curr === 3 && valid) {
+                const lic = document.getElementById('tipo_licencia');
+                if (lic.value) {
+                    const est = document.getElementById('estado_licencia');
+                    const exp = document.getElementById('exp_lic');
+                    const ven = document.getElementById('ven_lic');
+                    const fileLic = document.getElementById('file_licencia');
+
+                    if (!est.value) { valid = false; showInlineError(est, "Requerido"); }
+                    if (!exp.value) { valid = false; showInlineError(exp, "Requerido"); }
+                    if (!ven.value) { valid = false; showInlineError(ven, "Requerido"); }
+
+                    if (exp.value && ven.value) {
+                        const dExp = new Date(exp.value);
+                        const dVen = new Date(ven.value);
+                        const diffTime = dVen - dExp;
+                        const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+                        if (diffYears < 9.9) { // ~10 años
+                            valid = false;
+                            showInlineError(ven, "La licencia debe tener una vigencia mínima de 10 años.");
+                        } else if (dVen <= dExp) {
+                            valid = false;
+                            showInlineError(ven, "La fecha de vencimiento debe ser posterior.");
+                        }
+                    }
+                }
+            }
+
+            if (valid) goToStep(next);
+        }
+
+        const licSelect = document.getElementById('tipo_licencia');
+        if (licSelect) {
+            licSelect.addEventListener('change', function () {
+                const on = this.value !== "";
+                ['estado_licencia', 'exp_lic', 'ven_lic', 'file_licencia'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.disabled = !on;
+                        if (id !== 'file_licencia') {
+                            el.required = on;
+                        } else {
+                            el.required = false; // opcional
+                        }
+                        if (!on && id !== 'file_licencia') el.value = "";
+                    }
+                });
+                filtrarMaq(this.value);
+            });
+            // Init based on current value
+            filtrarMaq(licSelect.value);
+        }
+
+        function filtrarMaq(lic) {
+            const map = { 'PRIMERA': 1, 'SEGUNDA': 2, 'TERCERA': 3, 'CUARTA': 4, 'QUINTA': 5 };
+            const req = { 1: 3, 2: 4, 3: 5, 4: 1, 5: 2, 6: 3, 7: 1, 8: 2, 9: 3, 10: 4, 11: 5, 12: 3, 13: 4, 0: 1 };
+            const g = map[lic] || 0;
+
+            const rows = document.querySelectorAll('.maq-row');
+            rows.forEach(row => {
+                const min = req[parseInt(row.dataset.subtipo)] || 1;
+                const cb = row.querySelector('.maq-checkbox');
+                if (g >= min) {
+                    row.style.display = ''; // Show row
+                    row.classList.remove('disabled');
+                    if (cb) cb.disabled = false;
+                } else {
+                    row.style.display = 'none'; // Hide row
+                    row.classList.add('disabled');
+                    if (cb) { cb.disabled = true; cb.checked = false; }
+                    row.classList.remove('selected');
+                }
+            });
+        }
+
+        window.toggleMaqRow = function (row) {
+            const chk = row.querySelector('.maq-checkbox');
+            if (!chk.checked && document.querySelectorAll('.maq-checkbox:checked').length >= 5) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Límite alcanzado',
+                    text: 'Máximo 5 unidades por operador.'
+                });
+                return;
+            }
+
+            chk.checked = !chk.checked;
+            row.classList.toggle('selected', chk.checked);
+        };
+
+        document.getElementById('form-operador').addEventListener('submit', function (e) {
+            const expLic = document.getElementById('exp_lic').value;
+            const venLic = document.getElementById('ven_lic').value;
+            const expSalud = document.getElementById('exp_salud').value;
+            const venSalud = document.getElementById('ven_salud').value;
+
+            let errorFechas = false;
+            let msgFechas = "";
+
+            if (expSalud && venSalud && venSalud <= expSalud) {
+                errorFechas = true;
+                msgFechas = "La Fecha de Vencimiento de Salud debe ser posterior a la Fecha de Expedición.";
+            } else if (expLic && venLic && venLic <= expLic) {
+                errorFechas = true;
+                msgFechas = "La Fecha de Vencimiento de la Licencia debe ser posterior a la Fecha de Expedición.";
+            }
+
+            if (errorFechas) {
+                e.preventDefault();
+                Swal.fire({ icon: 'error', title: 'Error de Fechas', text: msgFechas });
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            {% with msgs = get_flashed_messages(with_categories = true) %}
+            {% if msgs %}
+            {% for cat, msg in msgs %}
+            Swal.fire({
+                icon: "{{ 'success' if cat == 'success' else 'error' }}",
+                title: "{{ 'Hecho' if cat == 'success' else 'Error' }}",
+                text: "{{ msg }}",
+                confirmButtonColor: '#3498db'
+            });
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
+    <title>SIRCOV - Gestión de Usuarios</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+
+    <style>
+        :root {
+            --primary-dark: #2c3e50;
+            --secondary-dark: #34495e;
+            --accent-blue: #3498db;
+            --success-green: #2ecc71;
+            --warning-yellow: #f1c40f;
+            --error-red: #e74c3c;
+            --light-gray: #f8f9fa;
+            --border-color: #e0e0e0;
+            --text-muted: #7f8c8d;
+        }
+
+        /* --- BASE Y ESTRUCTURA --- */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            overflow-x: auto;
+            /* Permite scroll general si es necesario */
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 2000;
+            background: white;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* --- ÁREA DE CONTENIDO (Ajuste Responsive) --- */
+        .content-area {
+            margin-left: 280px;
+            padding: 25px;
+            transition: all 0.4s;
+            min-height: 100vh;
+            min-width: 1000px;
+            /* Evita que el contenido se amontone */
+        }
+
+        /* --- BOTÓN HAMBURGUESA --- */
+        .menu-trigger {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2500;
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- OVERLAY --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- RESPONSIVE CORE --- */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+            }
+
+            .content-area {
+                margin-left: 260px;
+                padding: 20px;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.4;
+            }
+
+            70% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: flex;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding-top: 80px;
+                min-width: 100%;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
+        /* --- TABLA CON SCROLL LATERAL --- */
+        .table-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            overflow-x: auto;
+            /* Activa el scroll horizontal */
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            min-width: 900px;
+            /* Asegura espacio para las columnas */
+            border-collapse: collapse;
+        }
+
+        /* Diseño de Scrollbar estético */
+        .table-card::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-card::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .table-card::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .table-card::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-dark);
+        }
+
+        th {
+            text-align: left;
+            padding: 18px 20px;
+            background: #f8f9fa;
+            color: var(--secondary-dark);
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            color: #555;
+        }
+
+        /* Estados */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .bg-activo {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            border: 1px solid #c3e6cb;
+        }
+
+        .bg-inactivo {
+            background-color: #fadbd8;
+            color: #c0392b;
+            border: 1px solid #f5b7b1;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .btn-edit {
+            background: rgba(44, 62, 80, 0.1);
+            color: var(--primary-dark);
+            text-decoration: none;
+        }
+
+        .btn-delete {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--error-red);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn-add {
+            background: var(--primary-dark);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(44, 62, 80, 0.2);
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        #noResults {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'usuarios' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            <header class="page-header">
+                <div>
+                    <h1 class="page-title">Gestion de Usuarios y Accesos</h1>
+                    <div class="page-subtitle">Control de Identidades (IAM) - Ciclo de Vida del Colaborador</div>
+                </div>
+                <a href="{{ url_for('usuarios.vista_agregar_usuario') }}" class="btn-add">
+                    <i class="fas fa-plus-circle"></i> Agregar Usuario
+                </a>
+            </header>
+
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="inputBuscador" class="search-input"
+                    placeholder="Buscar por Nombre, Rol o Código...">
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            {% for message in messages %}
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: "{{ message }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="table-card">
+                <table id="tablaUsuarios">
+                    <thead>
+                        <tr>
+                            <th>CÓDIGO</th>
+                            <th>USUARIO</th>
+                            <th>ROL</th>
+                            <th>ESTADO</th>
+                            <th style="text-align: center;">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in usuarios %}
+                        <tr>
+                            <td style="color: #3498db; font-weight: bold;">#{{ user.cod_usuario }}</td>
+                            <td>
+                                <strong>{{ user.nombre_usuario }}</strong><br>
+                                <small style="color: #95a5a6;">Registrado: {{ user.fecha_registro }}</small>
+                            </td>
+                            <td>
+                                <span
+                                    style="background: #e3f2fd; color: #1565c0; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;">
+                                    {{ user.rol }}
+                                </span>
+                            </td>
+                            <td>
+                                <span
+                                    class="status-badge {{ 'bg-activo' if user.estado == 'activo' else 'bg-inactivo' }}">
+                                    {{ user.estado | capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if session.rol == 'admin' %}
+                                    <a href="{{ url_for('usuarios.vista_editar_usuario', id=user.id_usuario) }}"
+                                        class="btn-icon btn-edit" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button class="btn-icon btn-delete"
+                                        onclick="confirmarEliminacion('{{ user.id_usuario }}')" title="Eliminar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                    {% else %}
+                                    <button class="btn-icon btn-edit" onclick="noPermissionAlert()" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-icon btn-delete" onclick="noPermissionAlert()" title="Eliminar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div id="noResults">
+                    <i class="fas fa-search-minus" style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                    No se encontraron resultados.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+
+        document.getElementById('inputBuscador').addEventListener('keyup', function () {
+            const term = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#tablaUsuarios tbody tr');
+            let found = false;
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const match = text.includes(term);
+                row.style.display = match ? '' : 'none';
+                if (match) found = true;
+            });
+            document.getElementById('noResults').style.display = found ? 'none' : 'block';
+        });
+
+        function confirmarEliminacion(id) {
+            Swal.fire({
+                title: '¿Confirmar eliminación?',
+                text: "Se eliminará el registro de SIRCOV permanentemente.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74c3c',
+                cancelButtonColor: '#bdc3c7',
+                confirmButtonText: 'Eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var baseUrl = "{{ url_for('usuarios.eliminar_usuario', id=0) }}";
+                    window.location.href = baseUrl.replace('/0', '/' + id);
+                }
+            });
+        }
+
+        function noPermissionAlert() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Acceso Denegado',
+                text: 'No tienes permiso para realizar esta acción. Solo el administrador puede editar o eliminar usuarios.',
+                confirmButtonColor: '#e74c3c',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    </script>
+</body>
+
+</html>

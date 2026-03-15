@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Información Mecánica</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'flota' %}
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            <header
+                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                <div>
+                    <h1 style="font-size: 1.8rem; color: #2c3e50; margin: 0; font-weight: bold;">Información Mecánica
+                    </h1>
+                    <div class="header-info" style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px;">Detalles
+                        técnicos del sistema de propulsión y rodado</div>
+                </div>
+            </header>
+
+            <div class="form-container"
+                style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <form id="registro-mecanico" method="POST" action="{{ url_for('flota.finalizar_registro') }}">
+                    <div class="form-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Tipo de
+                                Transmisión</label>
+                            <select id="tipo_transmision" name="tipo_transmision" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                                <option value="">Seleccione opción</option>
+                                <option value="Manual">Manual</option>
+                                <option value="Automatica">Automática</option>
+                                <option value="Semiautomatica">Semiautomática</option>
+                                <option value="Hidrostatica">Hidrostática</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">No. de
+                                Ejes</label>
+                            <input type="number" id="no_eje" name="no_eje" placeholder="Ej: 2" min="1" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">No. de
+                                Ruedas</label>
+                            <input type="number" id="no_ruedas" name="no_ruedas" placeholder="Ej: 4" min="1" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Código
+                                de Neumáticos</label>
+                            <input type="text" id="codigo_neumaticos" name="codigo_neumaticos"
+                                placeholder="Ej: 295/80 R22.5" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+
+                        <div class="form-group">
+                            <label
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Potencia
+                                (HP / kW)</label>
+                            <input type="text" id="potencia" name="potencia" placeholder="Ej: 450 HP" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Torque
+                                Máximo</label>
+                            <input type="text" id="torque" name="torque" placeholder="Ej: 1550 Nm @ 1100 rpm"
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+
+                    </div>
+
+                    <div class="form-actions"
+                        style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
+                        <button type="button" class="btn-back-form" onclick="window.history.back()"
+                            style="background: #e74c3c; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s;">
+                            Volver
+                        </button>
+                        <button type="submit" class="btn-next"
+                            style="background: #2c3e50; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.3s;">
+                            Finalizar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div
+                style="margin-top: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border-left: 4px solid #3498db; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 1.2rem;">âš™ï¸</span>
+                <p style="font-size: 0.85rem; color: #2c3e50; margin: 0;">
+                    Asegúrese de ingresar los valores de <strong>Potencia y Torque</strong> según las especificaciones
+                    del fabricante para optimizar los planes de mantenimiento preventivo.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Inicio de Sesión</title>
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body>
+
+    <div class="login-container">
+        <div class="login-left">
+            <img src="{{ url_for('static', filename='img/SIRCOV2.png') }}" alt="Logo SIRCOV" class="logo-empresa">
+        </div>
+
+        <div class="login-right">
+            <h2>Inicio de Sesión</h2>
+
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <label for="username">Usuario:</label>
+                    <input type="text" id="username" name="txt_usuario" placeholder="Usuario"
+                        value="{{ username | default('') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña:</label>
+                    <div style="position: relative;">
+                        <input type="password" id="password" name="txt_password" placeholder="Contraseña" required
+                            style="width: 100%; box-sizing: border-box; padding-right: 35px;">
+                        <i class="fa-solid fa-eye" id="eyeIconLogin"
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888; font-size: 16px;"></i>
+                    </div>
+                </div>
+
+                {% if error %}
+                <p style="color: #e74c3c; font-size: 0.9em; text-align: center;">{{ error }}</p>
+                {% endif %}
+
+                <div class="form-group">
+                    <button type="submit">Entrar al Sistema</button>
+                </div>
+
+                <div class="text-center" style="margin-top: 15px;">
+                    <a href="{{ url_for('recuperacion.mostrar_recuperacion') }}">¿Olvidaste tu Contraseña?</a>
+                </div>
+
+                <div class="text-center" style="margin-top: 10px;">
+                    <p style="font-size: 0.8em; color: #666;">Consulte al administrador para nuevas cuentas</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <script>
+        {% for category, message in messages %}
+        // Si es un mensaje de error, mostramos el texto en rojo bajo los inputs
+        {% if category == 'error' or category == 'danger' %}
+        document.addEventListener('DOMContentLoaded', function () {
+            let formGroup = document.querySelectorAll('.form-group')[1]; // Seleccionamos el contenedor del password
+            let errorMsg = document.createElement('p');
+            errorMsg.style.color = '#e74c3c';
+            errorMsg.style.fontSize = '0.9em';
+            errorMsg.style.textAlign = 'center';
+            errorMsg.style.marginTop = '10px';
+            errorMsg.innerHTML = '<i class="fas fa-exclamation-circle"></i> {{ message }}';
+            formGroup.parentNode.insertBefore(errorMsg, formGroup.nextSibling);
+        });
+        {% else %}
+        // Si es un éxito o advertencia, usamos SweetAlert
+        var iconType = 'info';
+        var titleText = 'Notificación';
+
+        {% if category == 'success' %}
+        iconType = 'success';
+        titleText = '¡Éxito!';
+        {% elif category == 'warning' %}
+        iconType = 'warning';
+        titleText = '¡Advertencia!';
+        {% endif %}
+
+        Swal.fire({
+            icon: iconType,
+            title: titleText,
+            text: "{{ message }}",
+            showConfirmButton: false,
+            timer: 3000
+        });
+        {% endif %}
+        {% endfor %}
+    </script>
+    {% endif %}
+    {% endwith %}
+
+    <script>
+        const eyeIconLogin = document.getElementById('eyeIconLogin');
+        const passInputLogin = document.getElementById('password');
+
+        if (eyeIconLogin) {
+            eyeIconLogin.addEventListener('click', () => {
+                const type = passInputLogin.type === 'password' ? 'text' : 'password';
+                passInputLogin.type = type;
+                eyeIconLogin.classList.toggle('fa-eye');
+                eyeIconLogin.classList.toggle('fa-eye-slash');
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
+    <title>SIRCOV - Módulo de Ayuda</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+
+    <style>
+        :root {
+            --primary-dark: #2c3e50;
+            --secondary-dark: #34495e;
+            --accent-blue: #3498db;
+            --success-green: #2ecc71;
+            --warning-yellow: #f1c40f;
+            --error-red: #e74c3c;
+            --light-gray: #f8f9fa;
+            --border-color: #e0e0e0;
+            --text-muted: #7f8c8d;
+        }
+
+        /* --- BASE Y ESTRUCTURA --- */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            /* Permitir scroll general si el contenido es muy ancho */
+            overflow-x: auto;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 2000;
+            background: white;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #dcdde1;
+            border-radius: 10px;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            text-decoration: none;
+            display: block;
+        }
+
+        /* --- ÁREA DE CONTENIDO (Unificada con Scroll) --- */
+        .content-area {
+            margin-left: 280px;
+            padding: 30px;
+            transition: all 0.4s;
+            min-height: 100vh;
+            /* Asegura que el contenido no se amontone en laptops */
+            min-width: 1000px;
+        }
+
+        /* --- BOTÓN HAMBURGUESA --- */
+        .menu-trigger {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2500;
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- OVERLAY --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- RESPONSIVE CORE --- */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+            }
+
+            .content-area {
+                margin-left: 260px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: flex;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding-top: 80px;
+                min-width: 100%;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
+        /* --- COMPONENTES PARA AYUDA --- */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            outline: none;
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        /* Estilos para el contenido de ayuda */
+        .help-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            overflow-x: auto;
+            position: relative;
+            padding: 20px;
+        }
+
+        .help-content h2 {
+            color: var(--success-green);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .help-content h3 {
+            color: var(--secondary-dark);
+        }
+
+        .help-content ol,
+        .help-content ul {
+            margin-left: 20px;
+        }
+
+        .toc ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .toc li {
+            margin-bottom: 10px;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: var(--accent-blue);
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        #noResults {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'ayuda' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <script>
+                Swal.fire({
+                    icon: "{{ 'error' if category == 'error' else 'success' }}",
+                    title: "{{ 'Error' if category == 'error' else 'Éxito' }}",
+                    text: "{{ message }}",
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            </script>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <section class="page-section active">
+                <header class="page-header">
+                    <div>
+                        <h1 class="page-title">¿Necesitas ayuda?</h1>
+                        <div class="page-subtitle">Aqui una Guía paso a paso para usar SIRCOV correctamente</div>
+                    </div>
+                </header>
+
+                <div class="help-content" id="helpTable">
+                    <div class="toc">
+                        <h2>Tabla de Contenidos</h2>
+                        <ul>
+                            <li><a href="#iniciar_sesion">Iniciar Sesión</a></li>
+                            <li><a href="#recuperar_contrasena">Recuperar Contraseña</a></li>
+                            <li><a href="#registrar_marca">Registrar una Marca</a></li>
+                            <li><a href="#agregar_equipo">Agregar un Equipo o Maquinaria</a></li>
+                            <li><a href="#editar_equipo">Editar un Equipo</a></li>
+                            <li><a href="#gestion_flota">Gestionar la Flota Vehicular</a></li>
+                            <li><a href="#agregar_operador">Agregar un Operador</a></li>
+                            <li><a href="#gestion_operadores">Gestionar Operadores</a></li>
+                            <li><a href="#agregar_usuario">Agregar un Usuario</a></li>
+                            <li><a href="#editar_usuario">Editar un Usuario</a></li>
+                            <li><a href="#gestion_usuarios">Gestionar Usuarios</a></li>
+                            <li><a href="#generar_reporte">Generar un Reporte</a></li>
+                            <li><a href="#configuracion">Configuración del Sistema</a></li>
+                            <li><a href="#panel_inicio">Navegar en el Panel de Inicio</a></li>
+                        </ul>
+                    </div>
+
+                    <div class="section" id="iniciar_sesion">
+                        <h2>Iniciar Sesión</h2>
+                        <p>Para acceder al sistema SIRCOV, sigue estos pasos:</p>
+                        <ol>
+                            <li>Ingresa tu nombre de usuario en el campo correspondiente.</li>
+                            <li>Ingresa tu contraseña en el campo de contraseña.</li>
+                            <li>Haz clic en el botón "Entrar al Sistema".</li>
+                            <li>Si olvidas tu contraseña, haz clic en el enlace "¿Olvidaste tu Contraseña?" para
+                                recuperarla.</li>
+                            <li>Si eres un nuevo usuario, consulta con el administrador para obtener una cuenta.</li>
+                        </ol>
+                        <p>Una vez iniciada la sesión, serás redirigido al panel principal donde verás un saludo
+                            personalizado y el menú de opciones.</p>
+                    </div>
+
+                    <div class="section" id="recuperar_contrasena">
+                        <h2>Recuperar Contraseña</h2>
+                        <p>Si has olvidado tu contraseña, puedes recuperarla respondiendo preguntas de seguridad:</p>
+                        <ol>
+                            <li>Ingresa tu nombre de usuario y correo electrónico registrado.</li>
+                            <li>Ingresa una nueva contraseña segura.</li>
+                            <li>Selecciona y responde tres preguntas de seguridad predefinidas (como el nombre de tu
+                                primera escuela o tu comida favorita).</li>
+                            <li>Haz clic en "Actualizar Credenciales".</li>
+                            <li>Si todo es correcto, podrás iniciar sesión con la nueva contraseña.</li>
+                        </ol>
+                        <p>Para ver la contraseña mientras la escribes, haz clic en el icono de ojo junto al campo.</p>
+                    </div>
+
+                    <div class="section" id="registrar_marca">
+                        <h2>Registrar una Marca</h2>
+                        <p>Para agregar una nueva marca al sistema:</p>
+                        <ol>
+                            <li>Desde el menú lateral, selecciona "Registro de Marca".</li>
+                            <li>Ingresa el nombre de la marca (ej: Caterpillar).</li>
+                            <li>Añade una descripción detallada.</li>
+                            <li>Selecciona las categorías aplicables (como Maquinaria Pesada o Vehículos Livianos).</li>
+                            <li>Agrega modelos asociados haciendo clic en el botón "+" para añadir más campos.</li>
+                            <li>Carga un logo de la marca (PNG o JPG) haciendo clic en el área de carga.</li>
+                            <li>Haz clic en "Guardar Marca" para confirmar, o "Cancelar" para volver atrás.</li>
+                        </ol>
+                        <p>Las marcas registradas se usarán al agregar equipos o maquinarias.</p>
+                    </div>
+
+                    <div class="section" id="agregar_equipo">
+                        <h2>Agregar un Equipo o Maquinaria</h2>
+                        <p>El registro de un equipo se realiza en varios pasos:</p>
+                        <h3>Paso 1: Información Básica</h3>
+                        <ol>
+                            <li>Selecciona el tipo de vehículo (ej: Camión).</li>
+                            <li>Elige la marca y modelo disponibles.</li>
+                            <li>Ingresa la cilindrada, sistema de combustión y odómetro actual.</li>
+                            <li>Haz clic en "Siguiente".</li>
+                        </ol>
+                        <h3>Paso 2: Identificación</h3>
+                        <ol>
+                            <li>Ingresa la placa, número de motor, serial de chasis y año de fabricación.</li>
+                            <li>Haz clic en "Siguiente Paso: Mecánica".</li>
+                        </ol>
+                        <h3>Paso 3: Información Mecánica</h3>
+                        <ol>
+                            <li>Ingresa detalles como potencia, torque, tipo de transmisión, número de ejes y ruedas
+                                (dependiendo de la categoría: liviana, pesada o maquinaria).</li>
+                            <li>Haz clic en "Finalizar Registro".</li>
+                        </ol>
+                        <p>Usa los botones de "Volver" para corregir pasos anteriores.</p>
+                    </div>
+
+                    <div class="section" id="editar_equipo">
+                        <h2>Editar un Equipo</h2>
+                        <p>Para modificar un equipo existente:</p>
+                        <ol>
+                            <li>Desde la gestión de flota, selecciona el equipo y haz clic en "Editar".</li>
+                            <li>Cambia el estado (Operativo, En Mantenimiento, Fuera de Servicio).</li>
+                            <li>Añade o modifica observaciones técnicas.</li>
+                            <li>Haz clic en "Guardar Cambios" o "Cancelar" para volver.</li>
+                        </ol>
+                    </div>
+
+                    <div class="section" id="gestion_flota">
+                        <h2>Gestionar la Flota Vehicular</h2>
+                        <p>Para ver y administrar la flota:</p>
+                        <ol>
+                            <li>Desde el menú, selecciona "Flota Vehicular".</li>
+                            <li>Usa el buscador para filtrar por cualquier dato.</li>
+                            <li>En la tabla, revisa detalles como ID, tipo, marca, etc.</li>
+                            <li>Haz clic en "Ver" para detalles en una ventana emergente.</li>
+                            <li>Haz clic en "Editar" para cambiar estado u observaciones.</li>
+                            <li>Haz clic en "Eliminar" y confirma para remover el equipo.</li>
+                        </ol>
+                        <p>Si no hay resultados, se muestra un mensaje indicándolo.</p>
+                    </div>
+
+                    <div class="section" id="agregar_operador">
+                        <h2>Agregar un Operador</h2>
+                        <p>El registro se divide en pasos:</p>
+                        <h3>Paso 1: Datos Personales</h3>
+                        <ol>
+                            <li>Ingresa nombres, apellidos, cédula, teléfono, edad (entre 18 y 60), sexo y nivel de
+                                instrucción.</li>
+                            <li>Añade un resumen general (opcional).</li>
+                            <li>Haz clic en "Siguiente".</li>
+                        </ol>
+                        <h3>Paso 2: Licencia y Experiencia</h3>
+                        <ol>
+                            <li>Selecciona el tipo de licencia y ingresa fechas de expedición y vencimiento.</li>
+                            <li>Ingresa años de experiencia y certificaciones (opcional).</li>
+                            <li>Haz clic en "Siguiente".</li>
+                        </ol>
+                        <h3>Paso 3: Asignación de Maquinarias</h3>
+                        <ol>
+                            <li>Selecciona hasta 3 maquinarias disponibles (filtradas por tipo de licencia).</li>
+                            <li>Haz clic en "Registrar Operador".</li>
+                        </ol>
+                    </div>
+
+                    <div class="section" id="gestion_operadores">
+                        <h2>Gestionar Operadores</h2>
+                        <p>Para administrar operadores:</p>
+                        <ol>
+                            <li>Desde el menú, selecciona "Operadores".</li>
+                            <li>Usa el buscador para filtrar.</li>
+                            <li>En la tabla, revisa datos como nombres, cédula, estado.</li>
+                            <li>Haz clic en "Ver" para detalles completos en una ventana.</li>
+                            <li>Haz clic en "Editar" para modificar (similar a agregar).</li>
+                            <li>Haz clic en "Eliminar" y confirma.</li>
+                        </ol>
+                    </div>
+
+                    <div class="section" id="agregar_usuario">
+                        <h2>Agregar un Usuario</h2>
+                        <p>Para crear un nuevo usuario:</p>
+                        <ol>
+                            <li>Ingresa un nombre de usuario (6-10 caracteres alfanuméricos).</li>
+                            <li>Crea una contraseña segura (con letra, número y símbolo).</li>
+                            <li>Selecciona el rol (ej: admin).</li>
+                            <li>Ingresa correo electrónico.</li>
+                            <li>Selecciona y responde tres preguntas de seguridad.</li>
+                            <li>Haz clic en "Agregar Usuario".</li>
+                        </ol>
+                        <p>Para ver la contraseña, usa el icono de ojo.</p>
+                    </div>
+
+                    <div class="section" id="editar_usuario">
+                        <h2>Editar un Usuario</h2>
+                        <p>Para modificar un usuario existente:</p>
+                        <ol>
+                            <li>Actualiza el nombre de usuario si es necesario.</li>
+                            <li>Modifica el rol, correo o respuestas a preguntas de seguridad.</li>
+                            <li>Haz clic en "Guardar Cambios" o "Cancelar".</li>
+                        </ol>
+                        <p>La contraseña no se edita aquí; usa recuperación si es necesario.</p>
+                    </div>
+
+                    <div class="section" id="gestion_usuarios">
+                        <h2>Gestionar Usuarios</h2>
+                        <p>Para ver y administrar usuarios:</p>
+                        <ol>
+                            <li>Desde el menú, selecciona "Gestión de Usuario".</li>
+                            <li>Usa el buscador para filtrar.</li>
+                            <li>En la tabla, revisa usuario, rol, correo.</li>
+                            <li>Haz clic en "Editar" para modificar.</li>
+                            <li>Haz clic en "Eliminar" y confirma.</li>
+                        </ol>
+                    </div>
+
+                    <div class="section" id="generar_reporte">
+                        <h2>Generar un Reporte</h2>
+                        <p>Para crear un reporte de flota:</p>
+                        <ol>
+                            <li>Desde el menú, selecciona "Reporte".</li>
+                            <li>Usa filtros como marca, estado, año, tanque o potencia.</li>
+                            <li>La tabla se actualiza automáticamente con los resultados.</li>
+                            <li>Haz clic en "Imprimir Reporte" para generar una versión imprimible.</li>
+                        </ol>
+                        <p>Los estados se muestran con colores para fácil identificación.</p>
+                    </div>
+
+                    <div class="section" id="configuracion">
+                        <h2>Configuración del Sistema</h2>
+                        <p>Solo disponible para administradores. Para configurar:</p>
+                        <ol>
+                            <li>Desde el menú, selecciona "Configuración".</li>
+                            <li>Elige una sección como Marcas y Modelos, Tipos y Subtipos, Logo o Historial de
+                                Impresiones.</li>
+                            <li>En cada sección, agrega, edita o elimina elementos (ej: agregar una nueva marca o subir
+                                un logo).</li>
+                            <li>Revisa el historial de impresiones para ver logs de reportes generados.</li>
+                            <li>Haz clic en "Imprimir Historial" para obtener una copia.</li>
+                        </ol>
+                    </div>
+
+                    <div class="section" id="panel_inicio">
+                        <h2>Navegar en el Panel de Inicio</h2>
+                        <p>Al iniciar sesión:</p>
+                        <ol>
+                            <li>Verás un saludo con tu nombre de usuario.</li>
+                            <li>Usa el menú lateral para acceder a opciones como Inicio, Flota Vehicular, Operadores,
+                                Gestión de Usuario, Reporte o Configuración (si eres admin).</li>
+                            <li>Para cerrar sesión, haz clic en "Cerrar Sesión" al final del menú.</li>
+                        </ol>
+                        <p>En dispositivos móviles, usa el botón de menú para abrir el sidebar.</p>
+                    </div>
+
+                    <div id="noResults">
+                        <i class="fas fa-search-minus"
+                            style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                        No se encontraron resultados.
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 900) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+
+        // Buscador dinámico para el contenido de ayuda
+        document.getElementById('searchInput').addEventListener('keyup', function () {
+            const term = this.value.toLowerCase();
+            const sections = document.querySelectorAll('.help-content .section');
+            let found = false;
+            sections.forEach(section => {
+                const text = section.innerText.toLowerCase();
+                const match = text.includes(term);
+                section.style.display = match ? '' : 'none';
+                if (match) found = true;
+            });
+            const toc = document.querySelector('.toc');
+            toc.style.display = term ? 'none' : '';  // Ocultar TOC durante búsqueda
+            document.getElementById('noResults').style.display = found ? 'none' : 'block';
+        });
+    </script>
+</body>
+
+</html>

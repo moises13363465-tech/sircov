@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
+
+    <title>SIRCOV - Gestión de Flota PTO</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+
+    <style>
+        :root {
+
+            --primary-dark: #2c3e50;
+
+            --secondary-dark: #34495e;
+
+            --accent-blue: #3498db;
+
+            --success-green: #2ecc71;
+
+            --warning-yellow: #f1c40f;
+
+            --error-red: #e74c3c;
+
+            --light-gray: #f8f9fa;
+
+            --border-color: #e0e0e0;
+
+            --text-muted: #7f8c8d;
+
+        }
+
+        /* --- BASE Y ESTRUCTURA --- */
+
+        body,
+
+        html {
+
+            margin: 0;
+
+            padding: 0;
+
+            min-height: 100vh;
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            background-color: #f4f6f9;
+
+            /* Permitir scroll general si el contenido es muy ancho */
+
+            overflow-x: auto;
+
+        }
+
+        /* --- SIDEBAR --- */
+
+        .sidebar {
+
+            width: 280px;
+
+            height: 100vh;
+
+            position: fixed;
+
+            left: 0;
+
+            top: 0;
+
+            z-index: 2000;
+
+            background: white;
+
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+
+            display: flex;
+
+            flex-direction: column;
+
+            overflow-y: auto;
+
+            overflow-x: hidden;
+
+        }
+
+        .sidebar::-webkit-scrollbar {
+
+            width: 5px;
+
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+
+            background: #dcdde1;
+
+            border-radius: 10px;
+
+        }
+
+        .sidebar-nav ul {
+
+            list-style: none;
+
+            padding: 0;
+
+            margin: 0;
+
+        }
+
+        .sidebar-nav a {
+
+            text-decoration: none;
+
+            display: block;
+
+        }
+
+        /* --- íREA DE CONTENIDO (Unificada con Scroll) --- */
+
+        .content-area {
+
+            margin-left: 280px;
+
+            padding: 30px;
+
+            transition: all 0.4s;
+
+            min-height: 100vh;
+
+            /* Asegura que el contenido no se amontone en laptops */
+
+            min-width: 1000px;
+
+        }
+
+        /* --- BOTí“N HAMBURGUESA --- */
+
+        .menu-trigger {
+
+            display: none;
+
+            position: fixed;
+
+            top: 15px;
+
+            left: 15px;
+
+            z-index: 2500;
+
+            background: white;
+
+            border: none;
+
+            width: 45px;
+
+            height: 45px;
+
+            border-radius: 10px;
+
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+
+            cursor: pointer;
+
+            font-size: 1.5rem;
+
+            color: var(--primary-dark);
+
+            align-items: center;
+
+            justify-content: center;
+
+        }
+
+        /* --- OVERLAY --- */
+
+        .overlay {
+
+            display: none;
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background: rgba(0, 0, 0, 0.5);
+
+            z-index: 1500;
+
+            backdrop-filter: blur(3px);
+
+        }
+
+        /* --- RESPONSIVE CORE --- */
+
+        @media (max-width: 1024px) {
+
+            .sidebar {
+
+                width: 260px;
+
+            }
+
+            .content-area {
+
+                margin-left: 260px;
+
+                padding: 20px;
+
+            }
+
+        }
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+
+                transform: translateX(-100%);
+
+                width: 280px;
+
+            }
+
+            .sidebar.active {
+
+                transform: translateX(0);
+
+            }
+
+            .menu-trigger {
+
+                display: flex;
+
+            }
+
+            .content-area {
+
+                margin-left: 0;
+
+                padding-top: 80px;
+
+                min-width: 100%;
+
+            }
+
+            .overlay.active {
+
+                display: block;
+
+            }
+
+        }
+
+        /* --- TABLA CON SCROLL LATERAL --- */
+
+        .table-card {
+
+            background: white;
+
+            border-radius: 12px;
+
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+
+            border: 1px solid var(--border-color);
+
+            width: 100%;
+
+            /* Activa el scroll horizontal solo en la tabla */
+
+            overflow-x: auto;
+
+            position: relative;
+
+        }
+
+        table {
+
+            width: 100%;
+
+            /* Forzamos un ancho mí­nimo para que aparezca el scroll y no se amontone la info */
+
+            min-width: 1100px;
+
+            border-collapse: collapse;
+
+        }
+
+        th {
+
+            text-align: left;
+
+            padding: 18px 20px;
+
+            background: #f8f9fa;
+
+            color: var(--secondary-dark);
+
+            font-weight: 700;
+
+            border-bottom: 2px solid var(--border-color);
+
+            text-transform: uppercase;
+
+            font-size: 0.8rem;
+
+        }
+
+        td {
+
+            padding: 16px 20px;
+
+            border-bottom: 1px solid var(--border-color);
+
+            vertical-align: middle;
+
+            color: #555;
+
+        }
+
+        /* Barra de scroll estética para la tabla */
+
+        .table-card::-webkit-scrollbar {
+
+            height: 10px;
+
+        }
+
+        .table-card::-webkit-scrollbar-track {
+
+            background: #f1f1f1;
+
+            border-radius: 10px;
+
+        }
+
+        .table-card::-webkit-scrollbar-thumb {
+
+            background: #cbd5e0;
+
+            border-radius: 10px;
+
+            border: 2px solid #f1f1f1;
+
+        }
+
+        .table-card::-webkit-scrollbar-thumb:hover {
+
+            background: var(--secondary-dark);
+
+        }
+
+        /* --- COMPONENTES --- */
+
+        .page-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: flex-end;
+
+            margin-bottom: 25px;
+
+            flex-wrap: wrap;
+
+            gap: 15px;
+
+        }
+
+        .page-title {
+
+            font-size: 1.8rem;
+
+            color: var(--primary-dark);
+
+            font-weight: 700;
+
+            margin: 0;
+
+        }
+
+        .page-subtitle {
+
+            color: var(--text-muted);
+
+            font-size: 0.9rem;
+
+        }
+
+        .btn-add {
+
+            background: var(--primary-dark);
+
+            color: white;
+
+            padding: 12px 20px;
+
+            border-radius: 8px;
+
+            border: none;
+
+            font-weight: 600;
+
+            cursor: pointer;
+
+            text-decoration: none;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            transition: 0.3s;
+
+        }
+
+        .search-wrapper {
+
+            position: relative;
+
+            margin-bottom: 25px;
+
+        }
+
+        .search-input {
+
+            width: 100%;
+
+            padding: 15px 15px 15px 45px;
+
+            border-radius: 12px;
+
+            border: 1px solid var(--border-color);
+
+            box-sizing: border-box;
+
+            outline: none;
+
+            background: white;
+
+        }
+
+        .search-icon {
+
+            position: absolute;
+
+            left: 15px;
+
+            top: 50%;
+
+            transform: translateY(-50%);
+
+            color: var(--text-muted);
+
+        }
+
+        .status-badge {
+
+            padding: 6px 12px;
+
+            border-radius: 20px;
+
+            font-size: 0.75rem;
+
+            font-weight: 700;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 5px;
+
+        }
+
+        .bg-operativo {
+
+            background-color: #e8f5e9;
+
+            color: #27ae60;
+
+            border: 1px solid #c3e6cb;
+
+        }
+
+        .bg-mantenimiento {
+
+            background-color: #fff9c4;
+
+            color: #d35400;
+
+            border: 1px solid #fae588;
+
+        }
+
+        .bg-fuera {
+
+            background-color: #fadbd8;
+
+            color: #c0392b;
+
+            border: 1px solid #f5b7b1;
+
+        }
+
+        .action-buttons {
+
+            display: flex;
+
+            gap: 8px;
+
+        }
+
+        .btn-icon {
+
+            width: 34px;
+
+            height: 34px;
+
+            border-radius: 8px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            cursor: pointer;
+
+            border: none;
+
+            transition: 0.2s;
+
+        }
+
+        .btn-view {
+
+            background: rgba(52, 152, 219, 0.1);
+
+            color: #3498db;
+
+        }
+
+        .btn-edit {
+
+            background: rgba(44, 62, 80, 0.1);
+
+            color: #2c3e50;
+
+        }
+
+        .btn-delete {
+
+            background: rgba(231, 76, 60, 0.1);
+
+            color: #e74c3c;
+
+        }
+
+        /* --- MODALES --- */
+
+        .modal-overlay {
+
+            display: none;
+
+            position: fixed;
+
+            z-index: 10000;
+
+            left: 0;
+
+            top: 0;
+
+            width: 100%;
+
+            height: 100%;
+
+            background: rgba(44, 62, 80, 0.7);
+
+            backdrop-filter: blur(4px);
+
+            align-items: center;
+
+            justify-content: center;
+
+            opacity: 0;
+
+            transition: opacity 0.3s ease;
+
+        }
+
+        .modal-overlay.show {
+
+            opacity: 1;
+
+        }
+
+        .modal-card {
+            background: var(--bg-card);
+            color: var(--text-color);
+            width: 95%;
+
+            max-width: 600px;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            transform: translateY(20px);
+
+            transition: transform 0.3s ease;
+
+        }
+
+        .modal-overlay.show .modal-card {
+
+            transform: translateY(0);
+
+        }
+
+        .modal-header {
+
+            background: var(--primary-dark);
+
+            color: white;
+
+            padding: 15px 20px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+        }
+
+        .modal-body {
+
+            padding: 20px;
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 15px;
+
+        }
+
+        .info-obs {
+            grid-column: 1 / -1;
+            background: var(--bg-light, #f8f9fa);
+            padding: 12px;
+
+            border-radius: 8px;
+
+            border: 1px solid #eee;
+
+        }
+
+        #noResults {
+
+            display: none;
+
+            text-align: center;
+
+            padding: 40px;
+
+            color: var(--text-muted);
+
+        }
+    </style>
+
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+
+</head>
+
+<body class="modulo">
+    {% set active_page = 'flota' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+
+        <div class="container">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+            {% for category, message in messages %}
+
+            <script>
+
+                Swal.fire({
+
+                    icon: "{{ 'error' if category == 'error' else 'success' }}",
+
+                    title: "{{ 'Error' if category == 'error' else '¡Éxito!' }}",
+
+                    text: "{{ message }}",
+
+                    timer: 3000,
+
+                    showConfirmButton: false
+
+                });
+
+            </script>
+
+            {% endfor %}
+
+            {% endif %}
+
+            {% endwith %}
+
+            <section class="page-section active">
+
+                <header class="page-header">
+
+                    <div>
+
+                        <h1 class="page-title">Control de Flota Vehicular
+                            <span
+                                style="font-size: 0.9rem; background: #2c3e50; color: white; padding: 4px 10px; border-radius: 15px; margin-left: 10px; vertical-align: middle;">
+                                Total: {{ equipos|length }} equipos
+                            </span>
+                        </h1>
+
+                        <div class="page-subtitle">Proyectos Técnicos Oriente, C.A.</div>
+
+                    </div>
+
+                    <a href="{{ url_for('flota.agregar_paso1') }}" class="btn-add">
+
+                        <i class="fas fa-plus-circle"></i> Agregar Nuevo Equipo
+
+                    </a>
+
+                </header>
+
+                <div class="search-wrapper"
+                    style="display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+                    <div class="search-box" style="flex-grow: 1;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchInput" class="search-input"
+                            placeholder="Buscar por Marca, Modelo, Placa...">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="window.print()" class="btn-icon btn-view no-print"
+                            title="Imprimir Listado Completo"
+                            style="padding: 10px 20px; width: auto; display: flex; align-items: center; gap: 10px; background: #2c3e50; color: white;">
+                            <i class="fas fa-print"></i> <span>Imprimir Listado</span>
+                        </button>
+                        {% if session.rol == 'admin' %}
+                        <button onclick="confirmarEliminacionMasiva()" class="btn-icon no-print"
+                            title="Eliminar Toda la Flota"
+                            style="padding: 10px 20px; width: auto; display: flex; align-items: center; gap: 10px; background: var(--error-red, #e74c3c); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-trash-sweep"></i> <span>Eliminar Todo</span>
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <style>
+                    @media print {
+
+                        .sidebar,
+                        .menu-trigger,
+                        .no-print,
+                        .action-buttons,
+                        .search-wrapper,
+                        .user-active-display {
+                            display: none !important;
+                        }
+
+                        .content-area {
+                            margin-left: 0 !important;
+                            padding: 0 !important;
+                        }
+
+                        .table-card {
+                            box-shadow: none !important;
+                            border: 1px solid #ddd !important;
+                        }
+
+                        table {
+                            width: 100% !important;
+                            font-size: 10px !important;
+                        }
+
+                        th,
+                        td {
+                            padding: 8px !important;
+                            border: 1px solid #eee !important;
+                        }
+
+                        .page-title {
+                            font-size: 1.5rem !important;
+                            text-align: center;
+                        }
+
+                        .page-subtitle {
+                            text-align: center;
+                            margin-bottom: 20px;
+                        }
+                    }
+
+                    .category-badge {
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 0.7rem;
+                        font-weight: 800;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        display: inline-block;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                    }
+
+                    .cat-liviana {
+                        background: #3498db;
+                        color: white;
+                    }
+
+                    .cat-pesada {
+                        background: #e67e22;
+                        color: white;
+                    }
+
+                    .cat-maquinaria {
+                        background: #9b59b6;
+                        color: white;
+                    }
+                </style>
+
+                <div class="table-card">
+
+                    <table id="tablaFlota">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>ID</th>
+                                <th>Subtipo</th>
+                                <th>Marca / Modelo</th>
+                                <th>Placa</th>
+                                <th>Tipo</th>
+                                <th>Estado</th>
+                                <th style="text-align: center;">Acciones</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for equipo in equipos %}
+
+                            <tr>
+
+                                <td class="id-cell">#{{ equipo.id_maquinaria }}</td>
+
+                                <td>{{ equipo.nombre_subtipo or 'S/D' }}</td>
+
+                                <td>
+
+                                    <strong>{{ equipo.nombre_marca }}</strong><br>
+
+                                    <small>{{ equipo.nombre_modelo }}</small>
+
+                                </td>
+
+                                <td style="font-family: monospace;">{{ equipo.placa or 'S/P' }}</td>
+                                <td style="font-weight: 700; color: var(--text-main);">
+                                    {{ equipo.categoria or 'S/C' }}
+                                </td>
+                                <td>
+
+                                    {% set est = equipo.estado|upper %}
+
+                                    <span
+                                        class="status-badge {{ 'bg-mantenimiento' if est == 'EN MANTENIMIENTO' else ('bg-fuera' if est == 'FUERA DE SERVICIO' else 'bg-operativo') }}">
+
+                                        {{ est or 'OPERATIVO' }}
+
+                                    </span>
+
+                                <td>
+
+                                    <div class="action-buttons">
+                                        <a href="{{ url_for('flota.expediente_maquinaria', id_maquinaria=equipo.id_maquinaria) }}"
+                                            class="btn-icon btn-view" title="Imprimir Expediente">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                        <button class="btn-icon btn-view" title="Vista Rápida"
+                                            data-info='{{ equipo | tojson | safe }}' onclick='openQuickView(this)'><i
+                                                class="fas fa-eye"></i></button>
+
+                                        {% if session.rol == 'admin' %}
+
+                                        <a href="{{ url_for('flota.editar_maquinaria', id_maquinaria=equipo.id_maquinaria) }}"
+                                            class="btn-icon btn-edit" title="Editar"><i class="fas fa-edit"></i></a>
+
+                                        <button class="btn-icon btn-delete" title="Eliminar"
+                                            onclick='confirmarEliminacion("{{ url_for("flota.eliminar_maquinaria", id_maquinaria=equipo.id_maquinaria) }}", "{{ equipo.id_maquinaria }}")'><i
+                                                class="fas fa-trash-alt"></i></button>
+
+                                        {% else %}
+
+                                        <button class="btn-icon btn-edit" title="Editar (Admin)"
+                                            onclick="noPermissionAlert()"><i class="fas fa-edit"></i></button>
+
+                                        <button class="btn-icon btn-delete" title="Eliminar (Admin)"
+                                            onclick="noPermissionAlert()"><i class="fas fa-trash-alt"></i></button>
+
+                                        {% endif %}
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                    <div id="noResults">
+
+                        <i class="fas fa-search-minus"
+                            style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+
+                        No se encontraron resultados.
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </div>
+
+    <div id="detailsModal" class="modal-overlay">
+
+        <div class="modal-card">
+
+            <div class="modal-header">
+
+                <h2 style="margin: 0; font-size: 1.1rem;">Ficha Técnica <span id="m-id"></span></h2>
+
+                <i class="fas fa-times" onclick="closeModal()" style="cursor:pointer;"></i>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div><label><b>Tipo:</b></label>
+
+                    <p id="m-tipo" style="margin:5px 0;"></p>
+
+                </div>
+
+                <div><label><b>Marca/Modelo:</b></label>
+
+                    <p id="m-marca-modelo" style="margin:5px 0;"></p>
+
+                </div>
+
+                <div><label><b>Placa:</b></label>
+
+                    <p id="m-placa" style="margin:5px 0;"></p>
+
+                </div>
+
+                <div><label><b>Año/Potencia:</b></label>
+                    <p id="m-anio-pot" style="margin:5px 0;"></p>
+                </div>
+                <div><label><b>Operadores Asignados:</b></label>
+                    <p id="m-operadores" style="margin:5px 0; color: var(--accent-blue); font-weight: 600;"></p>
+                </div>
+                <div class="info-obs"><label><b>Observaciones:</b></label>
+                    <p id="m-obs" style="margin:5px 0; font-size: 0.9rem;"></p>
+                </div>
+
+            </div>
+
+            <div
+                style="padding: 15px; text-align: right; background: var(--bg-light, #f8f9fa); border-top: 1px solid var(--border-color);">
+
+                <button onclick="closeModal()"
+                    style="padding: 8px 20px; border-radius: 5px; border: none; background: #7f8c8d; color: white; cursor: pointer; font-weight: bold;">Cerrar
+                    Ficha</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        function toggleSidebar() {
+
+            const sb = document.getElementById('mainSidebar');
+
+            const overlay = document.getElementById('overlay');
+
+            sb.classList.toggle('active');
+
+            overlay.classList.toggle('active');
+
+        }
+
+        window.addEventListener('resize', () => {
+
+            if (window.innerWidth > 900) {
+
+                document.getElementById('mainSidebar').classList.remove('active');
+
+                document.getElementById('overlay').classList.remove('active');
+
+            }
+
+        });
+
+        // Buscador dinámico mejorado
+
+        document.getElementById('searchInput').addEventListener('keyup', function () {
+
+            const term = this.value.toLowerCase();
+
+            const rows = document.querySelectorAll('#tablaFlota tbody tr');
+
+            let found = false;
+
+            rows.forEach(row => {
+
+                const text = row.innerText.toLowerCase();
+
+                const match = text.includes(term);
+
+                row.style.display = match ? '' : 'none';
+
+                if (match) found = true;
+
+            });
+
+            document.getElementById('noResults').style.display = found ? 'none' : 'block';
+
+        });
+
+        const modal = document.getElementById('detailsModal');
+
+        function openQuickView(btn) {
+            try {
+                const data = JSON.parse(btn.getAttribute('data-info'));
+                openModal(data);
+            } catch (e) {
+                console.error("Error al parsear datos del equipo:", e);
+                Swal.fire('Error', 'No se pudieron cargar los detalles de este equipo.', 'error');
+            }
+        }
+
+        function openModal(d) {
+            document.getElementById('m-id').innerText = '#' + d.id_maquinaria;
+            document.getElementById('m-tipo').innerText = d.nombre_tipo || 'N/A';
+            document.getElementById('m-marca-modelo').innerText = `${d.nombre_marca} ${d.nombre_modelo}`;
+            document.getElementById('m-placa').innerText = d.placa || 'S/P';
+            document.getElementById('m-anio-pot').innerText = `${d.año_fabricacion || 'N/A'} - ${d.potencia || '0'} HP`;
+            document.getElementById('m-operadores').innerText = d.operadores || 'Sin asignar';
+            document.getElementById('m-obs').innerText = d.observaciones || 'Sin observaciones registrada.';
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+
+            modal.classList.remove('show');
+
+            setTimeout(() => modal.style.display = 'none', 300);
+
+            document.body.style.overflow = 'auto';
+
+        }
+
+        function confirmarEliminacion(url, id) {
+
+            Swal.fire({
+
+                title: 'Â¿Eliminar equipo #' + id + '?',
+
+                text: "Esta acción no se puede deshacer.",
+
+                icon: 'warning',
+
+                showCancelButton: true,
+
+                confirmButtonColor: '#e74c3c',
+
+                cancelButtonColor: '#7f8c8d',
+
+                confirmButtonText: 'Sí­, eliminar',
+
+                cancelButtonText: 'Cancelar'
+
+            }).then((result) => {
+
+                if (result.isConfirmed) window.location.href = url;
+
+            });
+
+        }
+
+        function noPermissionAlert() {
+
+            Swal.fire({
+
+                icon: 'error',
+
+                title: 'Acceso Denegado',
+
+                text: 'No tienes permiso para realizar esta acción. Solo el administrador puede editar o eliminar equipos.',
+
+                confirmButtonColor: '#e74c3c',
+
+                confirmButtonText: 'Entendido'
+
+            });
+
+        }
+
+        function confirmarEliminacionMasiva() {
+            Swal.fire({
+                title: '¿ELIMINAR TODA LA FLOTA?',
+                text: "Esta acción eliminará permanentemente todos los equipos y sus asignaciones. ¡NO SE PUEDE DESHACER!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'SÍ, ELIMINAR TODO',
+                cancelButtonText: 'CANCELAR'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Confirmación Final',
+                        text: "Escribe 'ELIMINAR' para confirmar el borrado total:",
+                        input: 'text',
+                        inputAttributes: {
+                            autocapitalize: 'off'
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: 'EJECUTAR',
+                        showLoaderOnConfirm: true,
+                        preConfirm: (texto) => {
+                            if (texto === 'ELIMINAR') {
+                                return true;
+                            } else {
+                                Swal.showValidationMessage('Debes escribir ELIMINAR exactamente');
+                                return false;
+                            }
+                        }
+                    }).then((resultFinal) => {
+                        if (resultFinal.isConfirmed) {
+                            window.location.href = "{{ url_for('flota.eliminar_todas_maquinarias') }}";
+                        }
+                    });
+                }
+            });
+        }
+
+    </script>
+
+
+</body>
+
+</html>

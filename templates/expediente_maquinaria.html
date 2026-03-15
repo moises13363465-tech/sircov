@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
+    <title>Expediente Maquinaria - #{{ equipo.id_maquinaria }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <style>
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: transparent !important;
+        }
+
+        .report-header-dynamic {
+            background: var(--bg-card, rgba(255, 255, 255, 0.95));
+            backdrop-filter: blur(10px);
+            padding: 25px 35px;
+            border-radius: 15px 15px 0 0;
+            border-bottom: 3px solid var(--accent-blue, #3498db);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left img {
+            height: 75px;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .header-right h2 {
+            margin: 0;
+            color: var(--text-main, #2c3e50);
+            text-transform: uppercase;
+            font-size: 1.4rem;
+        }
+
+        .header-right p {
+            margin: 2px 0;
+            color: var(--text-muted, #7f8c8d);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .results-container {
+            background: var(--bg-card, rgba(255, 255, 255, 0.9));
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: var(--text-main, #2c3e50);
+            border-bottom: 2px solid var(--border-color, rgba(0, 0, 0, 0.05));
+            padding-bottom: 10px;
+            margin: 30px 0 20px 0;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .data-item {
+            background: var(--bg-light, rgba(255, 255, 255, 0.7));
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color, rgba(0, 0, 0, 0.05));
+        }
+
+        .data-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-muted, #7f8c8d);
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .data-value {
+            font-weight: 700;
+            color: var(--text-color, #2c3e50);
+            font-size: 1rem;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 0;
+                width: 100%;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            .results-container,
+            .report-header-dynamic {
+                box-shadow: none;
+                border: 1px solid #eee;
+                background: white !important;
+                backdrop-filter: none;
+            }
+
+            .data-item {
+                background: white !important;
+                border: 1px solid #eee;
+            }
+
+            * {
+                color: black !important;
+                text-shadow: none !important;
+            }
+        }
+
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 2000;
+            background: white;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .user-active-display {
+            background: #ffffff;
+            margin: 15px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #3498db;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #2ecc71;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #2ecc71;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            opacity: 0.4;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.4;
+            }
+
+            70% {
+                transform: scale(2.5);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        .content-area {
+            margin-left: 280px;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .content-area {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="modulo">
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <header class="no-print"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+            <div>
+                <h1 style="color: #ffffff; text-shadow: 0 2px 5px rgba(0,0,0,0.3); margin: 0; font-weight: 800;">
+                    Expediente Técnico</h1>
+                <p style="color: #ffffff; opacity: 0.9; margin: 5px 0 0 0; font-weight: 500;">Equipo: {{
+                    equipo.nombre_marca }} {{ equipo.nombre_modelo }}</p>
+            </div>
+            <button onclick="window.print()"
+                style="background:#2c3e50; color:white; border:none; padding:12px 25px; border-radius:8px; cursor:pointer; font-weight:bold; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                <i class="fas fa-print"></i> Imprimir Expediente
+            </button>
+        </header>
+
+        <div class="report-header-dynamic">
+            <div class="header-left">
+                <img src="{{ url_for('static', filename='img/SIRCOV2.png') }}" alt="Logo Empresa">
+            </div>
+            <div class="header-right">
+                <h2>{{ encabezado.nombre_institucion if encabezado else 'Proyectos Técnicos Oriente, C.A.' }}</h2>
+                <p>RIF: {{ encabezado.rif if encabezado else 'J-30663481-4' }}</p>
+                <p style="font-size: 0.8rem; color: #95a5a6; margin-top: 10px; font-weight: bold;">
+                    Fecha de emisión: <span id="fecha-actual"></span>
+                </p>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div class="section-title"><i class="fas fa-info-circle"></i> Especificaciones del Activo</div>
+            <div class="data-grid">
+                <div class="data-item"><span class="data-label">Tipo / Subtipo</span><span class="data-value">{{
+                        equipo.categoria or 'S/D' }} - {{ equipo.nombre_tipo or 'S/D' }}</span></div>
+                <div class="data-item"><span class="data-label">Marca / Modelo</span><span class="data-value">{{
+                        equipo.nombre_marca }} {{ equipo.nombre_modelo }}</span></div>
+                <div class="data-item"><span class="data-label">Placa</span><span class="data-value"
+                        style="font-family: monospace;">{{ equipo.placa or 'S/P' }}</span></div>
+                <div class="data-item"><span class="data-label">Año de Fabricación</span><span class="data-value">{{
+                        equipo.año_fabricacion or 'N/A' }}</span></div>
+                <div class="data-item"><span class="data-label">Serial Motor</span><span class="data-value">{{
+                        equipo.nro_motor or 'S/N' }}</span></div>
+                <div class="data-item"><span class="data-label">Serial Chasis</span><span class="data-value">{{
+                        equipo.serial_chasis or 'S/N' }}</span></div>
+                <div class="data-item"><span class="data-label">Potencia / Transmisión</span><span class="data-value">{{
+                        equipo.potencia or '0' }} HP - {{ equipo.tipo_transmision }}</span></div>
+                <div class="data-item"><span class="data-label">Ejes / Ruedas</span><span class="data-value">{{
+                        equipo.nro_eje or '0' }} / {{ equipo.nro_ruedas or '0' }}</span></div>
+            </div>
+
+            <div class="section-title"><i class="fas fa-users"></i> Operadores Asignados</div>
+            {% if operadores %}
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr
+                        style="background: var(--bg-light, rgba(0,0,0,0.03)); border-bottom: 2px solid var(--accent-blue, #3498db); text-align: left;">
+                        <th style="padding: 12px; color: var(--text-main, #2c3e50);">Cédula</th>
+                        <th style="padding: 12px; color: var(--text-main, #2c3e50);">Nombre Completo</th>
+                        <th style="padding: 12px; color: var(--text-main, #2c3e50);">Teléfono</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for op in operadores %}
+                    <tr
+                        style="border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.05)); color: var(--text-color);">
+                        <td style="padding: 12px;"><strong>{{ op.cedula }}</strong></td>
+                        <td style="padding: 12px;">{{ op.nombres }} {{ op.apellidos }}</td>
+                        <td style="padding: 12px;">{{ op.telefono or 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="text-align: center; color: #95a5a6; padding: 20px;">No hay operadores vinculados a esta
+                maquinaria.</p>
+            {% endif %}
+
+            <div class="section-title"><i class="fas fa-clipboard-list"></i> Observaciones Generales</div>
+            <div
+                style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 12px; border: 1px dashed #ccc;">
+                {{ equipo.observaciones or 'Sin observaciones registradas.' }}
+            </div>
+
+            <div style="margin-top: 60px; display: flex; justify-content: space-around;" class="no-screen">
+                <div style="text-align: center; width: 220px; border-top: 1px solid #333; padding-top: 10px;">
+                    <small>Responsable de Flota</small>
+                </div>
+                <div style="text-align: center; width: 220px; border-top: 1px solid #333; padding-top: 10px;">
+                    <small>Sello Institucional</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('fecha-actual').textContent = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    </script>
+</body>
+
+</html>

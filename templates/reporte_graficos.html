@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
+    <title>SIRCOV - Dashboard Analítico</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --deep-navy: #1a2a4d;
+            --bright-blue: #3498db;
+            --light-blue: #ebf5fb;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border-light: #eef2f7;
+            --success-soft: #e8f8f5;
+            --success-dark: #27ae60;
+            --warning-soft: #fef9e7;
+            --warning-dark: #f39c12;
+            --danger-soft: #fdedec;
+            --danger-dark: #e74c3c;
+        }
+
+        body {
+            background-color: #f0f3f7;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- ESTILOS SINCRONIZADOS CON REPORTE OfICIAL --- */
+        .report-header-dynamic {
+            background: white;
+            padding: 25px 35px;
+            border-radius: 15px 15px 0 0;
+            border-bottom: 3px solid var(--accent-blue, #3498db);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .header-left img {
+            height: 120px;
+        }
+
+        .header-rif {
+            color: var(--text-main, #2c3e50) !important;
+            font-weight: bold !important;
+            margin-top: 5px !important;
+        }
+
+        /* --- DASHBOARD LAYOUT --- */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .chart-card-full {
+            grid-column: span 2;
+        }
+
+        .chart-card-visual {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        .chart-card-visual h3 {
+            font-size: 1.1rem;
+            color: var(--deep-navy);
+            margin: 0 0 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-container-std {
+            height: 350px;
+            position: relative;
+        }
+
+        /* --- MODO OSCURO --- */
+        [data-theme='dark'] .report-header-dynamic,
+        [data-theme='dark'] .chart-card-visual {
+            background: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        @media print {
+
+            .side-nav-wrapper,
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+
+            .infographic-sheet {
+                margin: 0;
+                box-shadow: none;
+                width: 100%;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'reportes' %}
+    <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <button class="menu-trigger no-print" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            <header class="page-header no-print">
+                <div>
+                    <h1 class="page-title">Dashboard Analítico</h1>
+                    <div class="page-subtitle">Pestaña activa: Diagramas Estadísticos</div>
+                </div>
+                <button onclick="window.print()" class="btn-add">
+                    <i class="fas fa-file-pdf"></i> Imprimir Dashboard
+                </button>
+            </header>
+
+            <div class="report-tabs no-print">
+                <a href="{{ url_for('reportes.generar_reporte') }}"
+                    style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--bg-light, #e2e8f0); color: var(--text-main, #2c3e50); display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-truck-moving"></i> Flota Vehicular</a>
+                <a href="{{ url_for('reportes.generar_reporte_operadores') }}"
+                    style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--bg-light, #e2e8f0); color: var(--text-main, #2c3e50); display: inline-flex; align-items: center; gap: 8px; margin-left: 10px;">
+                    <i class="fas fa-hard-hat"></i> Operadores</a>
+                <a href="{{ url_for('reportes.generar_reporte_graficos') }}"
+                    style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--primary, #2c3e50); color: white; display: inline-flex; align-items: center; gap: 8px; margin-left: 10px;">
+                    <i class="fas fa-chart-pie"></i> Diagramas</a>
+            </div>
+
+            <!-- Cabecera Oficial SIRCOV -->
+            <div class="report-header-dynamic">
+                <div class="header-left">
+                    <img src="{{ url_for('static', filename='img/SIRCOV2.png') }}" alt="Logo Empresa">
+                </div>
+                <div class="header-right" style="text-align: right;">
+                    <h2 style="color: var(--text-main); font-weight: 800; font-size: 1.5rem; margin-bottom: 5px;">{{
+                        encabezado.institucion if encabezado else 'Proyectos Técnicos Oriente, C.A.' }}</h2>
+                    <p style="color: var(--text-muted); font-weight: 600;">{{ encabezado.departamento if encabezado else
+                        'Departamento de control de flota' }}</p>
+                    <p class="header-rif">RIF: {{ encabezado.rif if encabezado else 'J-308583022' }}</p>
+                    <p style="font-size: 0.8rem; color: #95a5a6; margin-top: 10px; font-weight: bold;">
+                        Fecha de emisión: <span id="fecha-actual-header"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Grid de Diagramas -->
+            <div class="charts-grid">
+
+                <!-- 1. Operatividad -->
+                <div class="chart-card-visual">
+                    <h3><i class="fas fa-check-circle" style="color: var(--success-dark);"></i> Estado de Operatividad
+                    </h3>
+                    <div class="chart-container-std">
+                        <canvas id="chartOperatividad"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2. Por Tipo -->
+                <div class="chart-card-visual">
+                    <h3><i class="fas fa-layer-group" style="color: #3498db;"></i> Distribución por Tipo</h3>
+                    <div class="chart-container-std">
+                        <canvas id="chartTipo"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3. Por Subtipo -->
+                <div class="chart-card-visual chart-card-full">
+                    <h3><i class="fas fa-truck-pickup" style="color: #9b59b6;"></i> Detalle por Subtipo de Equipo</h3>
+                    <div id="containerSubtipo" class="chart-container-std"
+                        style="height: auto; min-height: 400px; max-height: 800px; overflow-y: auto;">
+                        <canvas id="chartSubtipo"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Datos para JS (Ocultos) -->
+            <script id="status-data-json" type="application/json">{{ stats_estado | tojson | safe }}</script>
+            <script id="type-data-json" type="application/json">{{ stats_tipo | tojson | safe }}</script>
+            <script id="subtype-data-json" type="application/json">{{ stats_subtipo | tojson | safe }}</script>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('mainSidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        document.getElementById('fecha-actual-header').textContent = new Date().toLocaleDateString('es-ES', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // Inyección de Datos (Lectura Segura)
+        const statusData = JSON.parse(document.getElementById('status-data-json').textContent);
+        const typeData = JSON.parse(document.getElementById('type-data-json').textContent);
+        const subtypeData = JSON.parse(document.getElementById('subtype-data-json').textContent);
+
+        // --- Configuración Global Chart.js ---
+        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+        const labelColor = isDarkMode ? '#b0b3b8' : '#2c3e50';
+        Chart.defaults.color = labelColor;
+        Chart.defaults.font.family = "'Inter', sans-serif";
+
+        // --- 1. Gráfico de Operatividad (Dona) ---
+        new Chart(document.getElementById('chartOperatividad'), {
+            type: 'doughnut',
+            data: {
+                labels: statusData.map(s => s.estado || 'S/N'),
+                datasets: [{
+                    data: statusData.map(s => s.cantidad),
+                    backgroundColor: ['#2ecc71', '#f1c40f', '#e74c3c', '#3498db'],
+                    borderWidth: 0,
+                    hoverOffset: 20
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 20, font: { weight: '700' } } }
+                }
+            }
+        });
+
+        // --- 2. Gráfico por Tipo (Barras con Gradiente) ---
+        const ctxTipo = document.getElementById('chartTipo').getContext('2d');
+        const gradTipo = ctxTipo.createLinearGradient(0, 0, 0, 400);
+        gradTipo.addColorStop(0, '#3498db');
+        gradTipo.addColorStop(1, '#2c3e50');
+
+        new Chart(ctxTipo, {
+            type: 'bar',
+            data: {
+                labels: typeData.map(t => (t.tipo || 'S/N').toUpperCase()),
+                datasets: [{
+                    label: 'Cantidad',
+                    data: typeData.map(t => t.cantidad),
+                    backgroundColor: gradTipo,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                        ticks: { color: labelColor, font: { weight: 'bold' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: labelColor, font: { weight: 'bold' } }
+                    }
+                }
+            }
+        });
+
+        // --- 3. Gráfico por Subtipo (Líneas Finas Azul Celeste) ---
+        const canvasSubtipo = document.getElementById('chartSubtipo');
+        // Compactación final (de 30 a 22) para lograr el equilibrio perfecto
+        const rowHeight = 22;
+        const totalItems = subtypeData.length;
+        const dynamicHeight = Math.max(400, totalItems * rowHeight);
+
+        canvasSubtipo.parentNode.style.height = 'auto';
+        canvasSubtipo.style.height = dynamicHeight + 'px';
+
+        new Chart(canvasSubtipo, {
+            type: 'bar',
+            data: {
+                labels: subtypeData.map(t => (t.subtipo || 'S/N').toUpperCase()),
+                datasets: [{
+                    label: 'Unidades',
+                    data: subtypeData.map(t => t.cantidad),
+                    backgroundColor: '#76d7ea', // Azul celeste clarito solicitado
+                    borderRadius: 10,
+                    barThickness: 8, // Grosor fino para que parezcan líneas
+                    categoryPercentage: 1.0,
+                    barPercentage: 1.0
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                        position: 'top',
+                        ticks: { color: labelColor }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: {
+                            color: labelColor,
+                            font: { weight: '600', size: 12 },
+                            padding: 15,
+                            autoSkip: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Información Básica Vehicular</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'flota' %}
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            <header
+                style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                <div>
+                    <h1 style="font-size: 1.8rem; color: #2c3e50; margin: 0; font-weight: bold;">Información Básica
+                        Vehicular</h1>
+                    <div class="header-info" style="color: #7f8c8d; font-size: 0.9rem; margin-top: 5px;">Proyectos
+                        Técnicos Oriente, C.A.</div>
+                </div>
+            </header>
+
+            <div class="form-container"
+                style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <form id="registro-basico" method="POST" action="{{ url_for('flota.registro_paso1') }}">
+                    <div class="form-grid"
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Descripción</label>
+                            <input type="text" id="descripcion" name="descripcion"
+                                placeholder="Describa el equipo o vehículo" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Tipo de
+                                Flota</label>
+                            <select id="tipo_flota" name="tipo_flota" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                                <option value="">Seleccione tipo</option>
+                                <option value="liviana">Liviana</option>
+                                <option value="pesada">Pesada</option>
+                                <option value="maquinaria">Maquinaria</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Marca</label>
+                            <input type="text" id="marca" name="marca" placeholder="Ej: Caterpillar, Toyota" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Modelo</label>
+                            <input type="text" id="modelo" name="modelo" placeholder="Ej: Hilux, D8T" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Año de
+                                Fabricación</label>
+                            <input type="number" id="anio" name="anio" placeholder="AAAA" min="1900" max="2026" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Color</label>
+                            <input type="text" id="color" name="color" placeholder="Ej: Amarillo, Blanco"
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Cilindrada</label>
+                            <input type="text" id="cilindrada" name="cilindrada" placeholder="Ej: 2500cc, 6.7L"
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Sistema
+                                de Combustión</label>
+                            <select id="combustion" name="combustion" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                                <option value="">Seleccione sistema</option>
+                                <option value="Gasolina">Gasolina</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Gas">Gas</option>
+                                <option value="Electrico">Híbrido / Eléctrico</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label
+                                style="display: block; margin-bottom: 8px; font-weight: 600; color: #34495e;">Odómetro
+                                (Km / Horas)</label>
+                            <input type="number" id="odometro" name="odometro"
+                                placeholder="Ingrese kilometraje o medición" required
+                                style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+                        </div>
+                    </div>
+
+                    <div class="form-actions"
+                        style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
+                        <button type="button" class="btn-back-form" onclick="window.history.back()"
+                            style="background: #e74c3c; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Volver
+                        </button>
+                        <button type="submit" class="btn-next"
+                            style="background: #2c3e50; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Siguiente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SIRCOV - Editar Usuario</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <style>
+        :root {
+            --primary-dark: #2c3e50;
+            --accent-blue: #3498db;
+            --success-green: #2ecc71;
+            --error-red: #e74c3c;
+            --light-gray: #f4f7f6;
+        }
+
+        .content-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            cursor: pointer;
+            color: #7f8c8d;
+            z-index: 10;
+        }
+
+        .section-title {
+            margin-top: 40px;
+            border-bottom: 2px solid var(--light-gray);
+            padding-bottom: 10px;
+            color: var(--primary-dark);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-save {
+            padding: 12px 30px;
+            border: none;
+            background: var(--primary-dark);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .btn-save:hover:not(:disabled) {
+            background: #1a252f;
+            transform: translateY(-1px);
+        }
+
+        .btn-save:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-cancel {
+            padding: 12px 25px;
+            text-decoration: none;
+            color: #7f8c8d;
+            background: white;
+            border-radius: 8px;
+            font-weight: 600;
+            border: 1px solid #e0e0e0;
+        }
+
+        .status-msg {
+            font-size: 0.75rem;
+            margin-top: 6px;
+            display: block;
+            min-height: 15px;
+        }
+
+        .text-error {
+            color: var(--error-red);
+        }
+
+        .text-success {
+            color: var(--success-green);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .status-select {
+            font-weight: bold;
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'usuarios' %}
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            <header style="margin-bottom: 30px;">
+                <h1>Modificar Perfil de Usuario</h1>
+                <div class="header-info">Editando a: <strong>{{ user.nombre_usuario }}</strong></div>
+            </header>
+
+            <div class="table-wrapper" style="padding: 30px; background: white; border-radius: 8px;">
+                <form action="{{ url_for('usuarios.actualizar_usuario', id=user.id_usuario) }}" method="POST">
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nombre de Usuario</label>
+                            <input type="text" name="nombre_usuario" id="username_input" required
+                                value="{{ user.nombre_usuario }}" placeholder="Ej: admin2024" class="form-input"
+                                pattern="^[a-zA-Z0-9]+$"
+                                title="El nombre de usuario debe contener entre 6 y 10 caracteres alfanuméricos."
+                                minlength="6" maxlength="10">
+                            <span id="user_status" class="status-msg text-error">Requerido: 6-10 caracteres</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Código de Usuario</label>
+                            <input type="text" name="cod_usuario" required value="{{ user.cod_usuario }}"
+                                placeholder="USR-001" class="form-input" pattern="^[a-zA-Z0-9-]{3,15}$"
+                                title="El código de usuario debe tener entre 3 y 15 caracteres (solo letras, números y guiones)."
+                                maxlength="15">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Rol de Usuario</label>
+                            <select name="rol" class="form-input">
+                                <option value="admin" {{ 'selected' if user.rol=='admin' else '' }}>Administrador
+                                </option>
+                                <option value="gerente" {{ 'selected' if user.rol=='gerente' else '' }}>Gerente</option>
+                                <option value="operador" {{ 'selected' if user.rol=='operador' else '' }}>Operador
+                                </option>
+                                <option value="usuario" {{ 'selected' if user.rol=='usuario' else '' }}>Usuario</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado de la Cuenta</label>
+                            <select name="estado" class="form-input status-select">
+                                <option value="activo" {{ 'selected' if user.estado=='activo' else '' }}>Activo</option>
+                                <option value="inactivo" {{ 'selected' if user.estado=='inactivo' else '' }}>Inactivo
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <div class="password-container">
+                                <input type="password" name="contraseña_hash" id="pass_input" readonly value="********"
+                                    class="form-input" style="padding-right: 40px;">
+                                <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                            </div>
+                            <span id="pass_status" class="status-msg" style="color: #7f8c8d;">La contraseña no se puede
+                                editar aquí</span>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: flex-end; padding-bottom: 25px;">
+                            <p style="font-size: 0.8rem; color: #7f8c8d; margin: 0;">* Los cambios realizados se
+                                aplicarán al guardar el perfil.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="section-title"><i class="fas fa-shield-alt"></i> Preguntas de Seguridad</h3>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Pregunta 1</label>
+                            <select name="pregunta1" required class="form-input">
+                                <option value="1" {{ 'selected' if user.pregunta1=='1' else '' }}>¿Cuál es tu color
+                                    favorito?</option>
+                                <option value="2" {{ 'selected' if user.pregunta1=='2' else '' }}>¿Cuál es el nombre de
+                                    tu primera mascota?</option>
+                                <option value="3" {{ 'selected' if user.pregunta1=='3' else '' }}>¿En qué ciudad
+                                    naciste?</option>
+                                <option value="4" {{ 'selected' if user.pregunta1=='4' else '' }}>¿Cuál es el nombre de
+                                    tu abuelo materno?</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Respuesta 1</label>
+                            <input type="text" name="respuesta1" required class="form-input"
+                                value="{{ user.respuesta1 }}">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Pregunta 2</label>
+                            <select name="pregunta2" required class="form-input">
+                                <option value="5" {{ 'selected' if user.pregunta2=='5' else '' }}>¿Cómo se llamaba tu
+                                    primera escuela?</option>
+                                <option value="6" {{ 'selected' if user.pregunta2=='6' else '' }}>¿Cuál es la marca de
+                                    tu primer coche?</option>
+                                <option value="7" {{ 'selected' if user.pregunta2=='7' else '' }}>¿Nombre de tu mejor
+                                    amigo de la infancia?</option>
+                                <option value="8" {{ 'selected' if user.pregunta2=='8' else '' }}>¿Cuál es tu deporte
+                                    favorito?</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Respuesta 2</label>
+                            <input type="text" name="respuesta2" required class="form-input"
+                                value="{{ user.respuesta2 }}">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Pregunta 3</label>
+                            <select name="pregunta3" required class="form-input">
+                                <option value="9" {{ 'selected' if user.pregunta3=='9' else '' }}>¿Cuál es tu comida
+                                    favorita?</option>
+                                <option value="10" {{ 'selected' if user.pregunta3=='10' else '' }}>¿Cuál es tu hobby o
+                                    pasatiempo principal?</option>
+                                <option value="11" {{ 'selected' if user.pregunta3=='11' else '' }}>¿Cuál es tu canción
+                                    o banda preferida?</option>
+                                <option value="12" {{ 'selected' if user.pregunta3=='12' else '' }}>¿A qué país te
+                                    gustaría viajar?</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Respuesta 3</label>
+                            <input type="text" name="respuesta3" required class="form-input"
+                                value="{{ user.respuesta3 }}">
+                        </div>
+                    </div>
+
+                    <div
+                        style="display: flex; justify-content: flex-end; gap: 15px; border-top: 2px solid var(--light-gray); padding-top: 25px; margin-top: 20px;">
+                        <a href="{{ url_for('usuarios.gestion_usuarios') }}" class="btn-cancel">Cancelar</a>
+                        <button type="submit" id="btn-submit" class="btn-save">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const usernameInput = document.getElementById('username_input');
+        const userStatus = document.getElementById('user_status');
+        const passInput = document.getElementById('pass_input');
+        const passStatus = document.getElementById('pass_status');
+        const btnSubmit = document.getElementById('btn-submit');
+        const togglePassword = document.getElementById('togglePassword');
+
+        function validateForm() {
+            const isUserValid = usernameInput.checkValidity();
+
+            // El botón se habilita si el usuario es válido
+            btnSubmit.disabled = !isUserValid;
+
+            // Ajustamos la opacidad visualmente para que se note si está bloqueado o no
+            btnSubmit.style.opacity = isUserValid ? "1" : "0.5";
+            btnSubmit.style.cursor = isUserValid ? "pointer" : "not-allowed";
+        }
+
+        usernameInput.addEventListener('input', function () {
+            if (this.checkValidity()) {
+                userStatus.textContent = "✔ Usuario válido";
+                userStatus.className = "status-msg text-success";
+            } else {
+                userStatus.textContent = "✖ 6-10 caracteres (solo letras y números)";
+                userStatus.className = "status-msg text-error";
+            }
+            validateForm();
+        });
+
+        // Mantenemos esto por si acaso, aunque el input sea readonly
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function () {
+                const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // ¡IMPORTANTE! Ejecutar al cargar para que el botón esté activo desde el inicio
+        document.addEventListener('DOMContentLoaded', validateForm);
+    </script>
+</body>
+
+</html>

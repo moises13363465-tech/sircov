@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=1.0">
+    <title>SIRCOV - Acerca de</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <style>
+        :root {
+            --primary-dark: #2c3e50;
+            --secondary-dark: #34495e;
+            --accent-blue: #3498db;
+            --success-green: #2ecc71;
+            --warning-yellow: #f1c40f;
+            --error-red: #e74c3c;
+            --light-gray: #f8f9fa;
+            --border-color: #e0e0e0;
+            --text-muted: #7f8c8d;
+        }
+
+        /* --- BASE Y ESTRUCTURA --- */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            overflow-x: auto;
+            /* Permite scroll general si es necesario */
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 2000;
+            background: white;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* --- ÁREA DE CONTENIDO (Ajuste Responsive) --- */
+        .content-area {
+            margin-left: 280px;
+            padding: 25px;
+            transition: all 0.4s;
+            min-height: 100vh;
+            min-width: 1000px;
+            /* Evita que el contenido se amontone */
+        }
+
+        /* --- BOTÓN HAMBURGUESA --- */
+        .menu-trigger {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2500;
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* --- OVERLAY --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- RESPONSIVE CORE --- */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+            }
+
+            .content-area {
+                margin-left: 260px;
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: flex;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding-top: 80px;
+                min-width: 100%;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
+        /* --- TABLA CON SCROLL LATERAL --- */
+        .table-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            width: 100%;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        table {
+            width: 100%;
+            min-width: 900px;
+            border-collapse: collapse;
+        }
+
+        /* Diseño de Scrollbar estético */
+        .table-card::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-card::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .table-card::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .table-card::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-dark);
+        }
+
+        th {
+            text-align: left;
+            padding: 18px 20px;
+            background: #f8f9fa;
+            color: var(--secondary-dark);
+            font-weight: 700;
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+            color: #555;
+        }
+
+        /* Estados */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .bg-activo {
+            background-color: #e8f5e9;
+            color: #27ae60;
+            border: 1px solid #c3e6cb;
+        }
+
+        .bg-inactivo {
+            background-color: #fadbd8;
+            color: #c0392b;
+            border: 1px solid #f5b7b1;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .btn-edit {
+            background: rgba(44, 62, 80, 0.1);
+            color: var(--primary-dark);
+            text-decoration: none;
+        }
+
+        .btn-delete {
+            background: rgba(231, 76, 60, 0.1);
+            color: var(--error-red);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .btn-add {
+            background: var(--primary-dark);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(44, 62, 80, 0.2);
+        }
+
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        #noResults {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        /* Estilos para Acerca de */
+        .about-info {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .about-info img {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+
+        .about-info p {
+            margin: 10px 0;
+            font-size: 1.05rem;
+        }
+
+        .about-info h2 {
+            color: var(--success-green);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin: 30px 0 20px;
+            text-align: left;
+        }
+
+        .legal-links a {
+            display: block;
+            color: var(--accent-blue);
+            text-decoration: none;
+            margin: 10px 0;
+            font-size: 1rem;
+        }
+
+        .legal-links a:hover {
+            text-decoration: underline;
+        }
+
+        .changelog ul {
+            list-style-type: disc;
+            margin-left: 20px;
+            text-align: left;
+        }
+
+        .changelog li {
+            margin-bottom: 15px;
+        }
+
+        .btn-update {
+            background: var(--accent-blue);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+        }
+
+        .btn-update:hover {
+            background: #2980b9;
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'acerca_de' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <header class="page-header" style="margin-bottom: 40px; text-align: center; display: block;">
+                <div
+                    style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div
+                        style="display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 25px; flex-wrap: wrap;">
+                        <img src="{{ url_for('static', filename='img/SIRCOV2.png') }}" alt="Logo Empresa"
+                            style="max-height: 140px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));">
+                        <div style="width: 2px; height: 100px; background: rgba(0,0,0,0.1); border-radius: 2px;"
+                            class="divider-logos"></div>
+                        <img src="{{ url_for('static', filename='img/SIRCOVWM.png') }}" id="systemLogoAbout"
+                            alt="Logo Sistema"
+                            style="max-height: 160px; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));">
+                    </div>
+                    <h1 class="page-title"
+                        style="color: #2c3e50; text-shadow: 0 1px 3px rgba(0,0,0,0.1); font-size: 2.5rem; margin-bottom: 10px;">
+                        SIRCOV</h1>
+                    <div class="page-subtitle" style="color: #5d6d7e; font-size: 1.1rem; font-weight: 500;">Sistema de
+                        Información de Registro y Control de Flota Vehicular</div>
+                    <div style="margin-top: 15px; display: flex; justify-content: center; gap: 15px;">
+                        <span
+                            style="background: var(--accent-blue); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">v1.0.0</span>
+                        <span class="company-badge"
+                            style="background: rgba(0,0,0,0.05); color: #2c3e50; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Proyectos
+                            Técnicos Oriente, C.A.</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- SECCIÓN: NUESTRA HISTORIA -->
+            <div class="info-section" style="margin-bottom: 50px; animation: fadeIn 0.8s ease-out;">
+                <h2
+                    style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    <i class="fas fa-landmark" style="color: #f1c40f;"></i> Nuestra Historia
+                </h2>
+                <div style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 40px; border-radius: 15px; color: #2c3e50; line-height: 1.8; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid rgba(255,255,255,0.3);"
+                    class="glass-card">
+                    <p style="margin-bottom: 15px; font-size: 1.1rem;">
+                        <strong>Proyectos Técnicos Oriente C.A. (PTO)</strong> es una empresa venezolana especializada
+                        en el desarrollo de proyectos de ingeniería y construcción, con sede en el municipio San José de
+                        Guanipa, estado Anzoátegui. Fundada en la región oriental del país, se enfoca en satisfacer las
+                        necesidades de sus clientes mediante soluciones integrales en infraestructura, líneas de flujo,
+                        facilidades mecánicas y mejora continua.
+                    </p>
+                    <p style="font-size: 1.1rem;">
+                        Con énfasis en la calidad y el cumplimiento de estándares, <strong>PTO</strong> ha contribuido
+                        al sector industrial y petrolero de Venezuela, promoviendo el avance técnico en áreas clave como
+                        la construcción de obras civiles y mecánicas. Desde su creación, ha evolucionado para adaptarse
+                        a las demandas del mercado local, manteniendo un compromiso con la excelencia y la innovación en
+                        proyectos socio-tecnológicos.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: EQUIPO DE DESARROLLO -->
+            <div class="info-section" style="margin-bottom: 50px; animation: fadeIn 1s ease-out;">
+                <h2
+                    style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 25px; display: flex; align-items: center; gap: 15px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    <i class="fas fa-laptop-code" style="color: #3498db;"></i> Equipo de Desarrollo y Análisis
+                </h2>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px;">
+                    <!-- Manuel - Frontend -->
+                    <div class="dev-card glass-card"
+                        style="background: rgba(255,255,255,0.9); padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+                        <div
+                            style="width: 80px; height: 80px; background: #3498db; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; box-shadow: 0 5px 15px rgba(52,152,219,0.3);">
+                            <i class="fas fa-paint-brush"></i>
+                        </div>
+                        <h3 style="margin: 0; color: #2c3e50; font-size: 1.3rem;">Manuel Cordova</h3>
+                        <p
+                            style="color: #3498db; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; margin-top: 5px; letter-spacing: 1px;">
+                            Frontend Developer & UI/UX</p>
+                        <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 10px;">Especialista en interfaces
+                            interactivas y experiencia de usuario premium.</p>
+                    </div>
+
+                    <!-- Moises - Backend -->
+                    <div class="dev-card glass-card"
+                        style="background: rgba(255,255,255,0.9); padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+                        <div
+                            style="width: 80px; height: 80px; background: #2c3e50; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; box-shadow: 0 5px 15px rgba(44,62,80,0.3);">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <h3 style="margin: 0; color: #2c3e50; font-size: 1.3rem;">Moises Tovar</h3>
+                        <p
+                            style="color: #2c3e50; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; margin-top: 5px; letter-spacing: 1px;">
+                            Backend Architecture</p>
+                        <p style="color: #7f8c8d; font-size: 0.9rem; margin-top: 10px;">Encargado de la lógica de
+                            negocio, bases de datos y seguridad del sistema.</p>
+                    </div>
+
+                    <!-- Analysts Group -->
+                    <div class="dev-card glass-card analyst-card"
+                        style="background: rgba(255,255,255,0.9); padding: 30px; border-radius: 15px; text-align: center; transition: transform 0.3s; border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 5px 15px rgba(0,0,0,0.05); grid-column: span 1;">
+                        <div
+                            style="width: 80px; height: 80px; background: #2ecc71; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 2rem; box-shadow: 0 5px 15px rgba(46,204,113,0.3);">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 style="margin: 0; color: #2c3e50; font-size: 1.3rem;">Equipo de Análisis</h3>
+                        <p
+                            style="color: #2ecc71; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; margin-top: 5px; letter-spacing: 1px;">
+                            Sistemas y Procesos</p>
+                        <div
+                            style="margin-top: 15px; display: flex; flex-direction: column; gap: 5px; color: #555; font-weight: 600;">
+                            <span>Kamily Garcia</span>
+                            <span>Santiago Ramirez</span>
+                            <span>Luciana de Armas</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: NOVEDADES -->
+            <div class="info-section" style="margin-bottom: 50px; animation: fadeIn 1.2s ease-out;">
+                <h2
+                    style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    <i class="fas fa-rocket" style="color: #e67e22;"></i> Historial de Versiones
+                </h2>
+                <div style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; border-left: 5px solid #e67e22; box-shadow: 0 5px 20px rgba(0,0,0,0.05);"
+                    class="glass-card">
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li
+                            style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                            <strong style="color: #e67e22;">v1.0.0 (Actual)</strong>: Lanzamiento oficial. Gestión
+                            avanzada de flota, expedientes técnicos de operadores con carga de documentos y modo oscuro
+                            inteligente.
+                        </li>
+                        <li
+                            style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+                            <strong style="color: #7f8c8d;">v0.9.5</strong>: Sistema de reportes optimizado y módulo de
+                            configuración administrativa.
+                        </li>
+                        <li>
+                            <strong style="color: #7f8c8d;">v0.9.0</strong>: Estructura base de datos y sistema de
+                            recuperación de acceso.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dev-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .divider-logos {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .divider-logos {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        /* OVERRIDES MODO OSCURO */
+        [data-theme="dark"] .glass-card {
+            background: rgba(36, 37, 38, 0.85) !important;
+            color: #e4e6eb !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-theme="dark"] .glass-card strong,
+        [data-theme="dark"] .glass-card h3,
+        [data-theme="dark"] .glass-card span,
+        [data-theme="dark"] .page-title,
+        [data-theme="dark"] .page-subtitle,
+        [data-theme="dark"] .company-badge,
+        [data-theme="dark"] .info-section h2 {
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .company-badge {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        [data-theme="dark"] .glass-card p {
+            color: #b0b3b8 !important;
+        }
+
+        [data-theme="dark"] .dev-card {
+            background: rgba(45, 46, 47, 0.9) !important;
+        }
+    </style>
+
+    <script>
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Cambio de logo del sistema segun el tema
+        function updateAboutLogo() {
+            const logo = document.getElementById('systemLogoAbout');
+            const theme = document.documentElement.getAttribute('data-theme');
+            if (logo) {
+                logo.src = theme === 'dark'
+                    ? "{{ url_for('static', filename='img/SIRCOVDM.png') }}"
+                    : "{{ url_for('static', filename='img/SIRCOVWM.png') }}";
+            }
+        }
+
+        // Observar cambios en el tema para el logo
+        const observerAbout = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'data-theme') updateAboutLogo();
+            });
+        });
+        observerAbout.observe(document.documentElement, { attributes: true });
+        updateAboutLogo(); // Inicial
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

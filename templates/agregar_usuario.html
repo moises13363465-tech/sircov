@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Agregar Usuario</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+
+    <style>
+        /* --- VARIABLES Y BASE (Coherente con pasos anteriores) --- */
+        :root {
+            --primary-dark: #2c3e50;
+            --secondary-dark: #34495e;
+            --accent-blue: #3498db;
+            --success-green: #2ecc71;
+            --error-red: #e74c3c;
+            --light-gray: #f8f9fa;
+            --border-color: #dfe6e9;
+            --text-muted: #7f8c8d;
+        }
+
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* --- SIDEBAR PROFESIONAL --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 2000;
+            background: white;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-trigger {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2500;
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        .content-area {
+            margin-left: 280px;
+            padding: 40px;
+            transition: margin-left 0.4s;
+        }
+
+        /* --- CONTENEDOR TIPO TARJETA --- */
+        .content-card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.07);
+            max-width: 1000px;
+            margin: 0 auto;
+            border: 1px solid #f0f0f0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--secondary-dark);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        /* --- SECCIONES Y BOTONES --- */
+        .section-divider {
+            margin: 40px 0 25px 0;
+            border-bottom: 2px solid var(--light-gray);
+            position: relative;
+        }
+
+        .section-title {
+            position: absolute;
+            top: -15px;
+            left: 0;
+            background: white;
+            padding-right: 15px;
+            color: var(--primary-dark);
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid var(--light-gray);
+        }
+
+        .btn-save {
+            background: var(--primary-dark);
+            color: white;
+            padding: 14px 35px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-save:hover:not(:disabled) {
+            background: #1a252f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-cancel {
+            background: #f1f2f6;
+            color: #57606f;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: block;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 80px;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'usuarios' %}
+
+    {% include 'components/sidebar.html' %}
+
+
+    <div class="content-area">
+        <div class="container">
+
+            <header style="margin-bottom: 35px;">
+                <h1 style="font-size: 2rem; color: var(--primary-dark); margin: 0; font-weight: 800;">Agregar Nuevo
+                    Usuario</h1>
+                <p style="color: var(--text-muted); font-size: 1rem; margin-top: 5px;">Configure credenciales, roles y
+                    medidas de seguridad.</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert {{ 'alert-error' if category == 'error' else 'alert-success' }}"
+                style="margin-bottom: 20px; padding: 15px; border-radius: 10px; border: 1px solid;">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}            <div class="content-card">
+                <a href="{{ url_for('usuarios.gestion_usuarios') }}" class="header-link">
+                    <i class="fas fa-arrow-left"></i> Volver al listado
+                </a>
+                <form action="{{ url_for('usuarios.crear_usuario') }}" method="POST" id="userForm" autocomplete="off">
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Nombre de Usuario</label>
+                            <input type="text" name="nombre_usuario" id="username_input" required
+                                placeholder="Ej: admin2024" class="form-input" pattern="^[a-zA-Z0-9]+$"
+                                title="El nombre de usuario debe contener entre 6 y 10 caracteres alfanuméricos."
+                                minlength="6" maxlength="10">
+                            <span id="user_status" class="status-msg text-hint"
+                                style="font-size: 0.75rem; display: block; margin-top: 5px;"><i
+                                    class="fas fa-info-circle"></i> 6-10 caracteres alfanuméricos</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Código de Usuario</label>
+                            <input type="text" name="cod_usuario" id="cod_usuario" required placeholder="Ej: USR-001"
+                                class="form-input" pattern="^[a-zA-Z0-9-]{3,15}$"
+                                title="El código de usuario debe tener entre 3 y 15 caracteres (solo letras, números y guiones)."
+                                maxlength="15">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Rol de Usuario</label>
+                            <select name="rol" class="form-input">
+                                <option value="gerente">Gerente</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-input">
+                                <option value="activo" selected>Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Contraseña</label>
+                            <div style="position: relative;">
+                                <input type="password" name="contraseña_hash" id="pass_input" required
+                                    placeholder="Mínimo 8 caracteres" class="form-input" minlength="8">
+                                <i class="fas fa-eye" id="togglePassword"
+                                    style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);"></i>
+                            </div>
+
+                            <!-- Medidor de seguridad -->
+                            <div style="margin-top: 8px;">
+                                <div
+                                    style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 4px; font-weight: bold; color: #7f8c8d;">
+                                    <span>Nivel de Seguridad:</span>
+                                    <span id="strength-text" style="color: #7f8c8d;">Ninguno</span>
+                                </div>
+                                <div style="height: 5px; background: #eee; border-radius: 3px; overflow: hidden;">
+                                    <div id="strength-bar"
+                                        style="height: 100%; width: 0%; background: #e74c3c; transition: all 0.3s ease;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span id="pass_status" class="status-msg text-hint"
+                                style="font-size: 0.75rem; display: block; margin-top: 5px;"><i class="fas fa-lock"></i>
+                                Incluir: Mayúscula, número y símbolo</span>
+                        </div>
+                        <div class="form-group" style="display: flex; align-items: center;">
+                            <div
+                                style="background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; font-size: 0.85rem; border: 1px solid #ffeeba; width: 100%;">
+                                <i class="fas fa-exclamation-triangle"></i> Guarde las credenciales antes de finalizar.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-divider">
+                        <h3 class="section-title"><i class="fas fa-user-shield"></i> Preguntas de Seguridad</h3>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Pregunta 1</label>
+                            <select name="pregunta1" required class="form-input">
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option value="1">¿Cuál es tu color favorito?</option>
+                                <option value="2">¿Nombre de tu primera mascota?</option>
+                                <option value="3">¿En qué ciudad naciste?</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Respuesta 1</label>
+                            <input type="text" name="respuesta1" required class="form-input" placeholder="Respuesta">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Pregunta 2</label>
+                            <select name="pregunta2" required class="form-input">
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option value="5">¿Nombre de tu primera escuela?</option>
+                                <option value="8">¿Cuál es tu deporte favorito?</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Respuesta 2</label>
+                            <input type="text" name="respuesta2" required class="form-input" placeholder="Respuesta">
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Pregunta 3</label>
+                            <select name="pregunta3" required class="form-input">
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option value="9">¿Cuál es tu comida favorita?</option>
+                                <option value="12">¿A qué país te gustaría viajar?</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Respuesta 3</label>
+                            <input type="text" name="respuesta3" required class="form-input" placeholder="Respuesta">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ url_for('usuarios.gestion_usuarios') }}" class="btn-cancel">Cancelar</a>
+                        <button type="submit" id="btn-submit" class="btn-save" disabled>
+                            <i class="fas fa-save"></i> Crear Usuario
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Lógica Sidebar */
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        /* Lógica de Validación (Igual a la original pero aplicada al nuevo diseño) */
+        document.addEventListener('DOMContentLoaded', function () {
+            const usernameInput = document.getElementById('username_input');
+            const userStatus = document.getElementById('user_status');
+            const passInput = document.getElementById('pass_input');
+            const passStatus = document.getElementById('pass_status');
+            const btnSubmit = document.getElementById('btn-submit');
+            const togglePass = document.getElementById('togglePassword');
+
+            const USER_REGEX = /^[a-zA-Z0-9]+$/;
+            // Nueva Regex ESTRICTA: min 8 char, al menos 1 minúscula, 1 mayúscula, 1 número y 1 símbolo
+            const PASS_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.])[A-Za-z\d@$!%*?&.]{8,}$/;
+
+            function validateForm() {
+                const isUserValid = usernameInput.checkValidity();
+                const isPassValid = PASS_REGEX.test(passInput.value);
+                btnSubmit.disabled = !(isUserValid && isPassValid);
+            }
+
+            usernameInput.addEventListener('input', function () {
+                if (this.value.length >= 6 && this.value.length <= 10 && USER_REGEX.test(this.value)) {
+                    userStatus.style.color = "var(--success-green)";
+                    userStatus.innerHTML = '<i class="fas fa-check-circle"></i> Usuario válido';
+                } else {
+                    userStatus.style.color = "var(--error-red)";
+                    userStatus.innerHTML = '<i class="fas fa-times-circle"></i> 6-10 caracteres alfanuméricos';
+                }
+                validateForm();
+            });
+
+            passInput.addEventListener('input', function () {
+                const val = this.value;
+                let strength = 0;
+
+                if (val.length > 5) strength += 1;
+                if (val.length >= 8) strength += 1;
+                if (/[A-Z]/.test(val)) strength += 1;
+                if (/\d/.test(val)) strength += 1;
+                if (/[@$!%*?&.]/.test(val)) strength += 1;
+
+                const strengthBar = document.getElementById('strength-bar');
+                const strengthText = document.getElementById('strength-text');
+
+                if (val.length === 0) {
+                    strengthBar.style.width = '0%';
+                    strengthText.textContent = 'Ninguno';
+                    strengthText.style.color = '#7f8c8d';
+                } else if (strength <= 2) {
+                    strengthBar.style.width = '30%';
+                    strengthBar.style.background = '#e74c3c';
+                    strengthText.textContent = 'Débil';
+                    strengthText.style.color = '#e74c3c';
+                } else if (strength === 3 || strength === 4) {
+                    strengthBar.style.width = '65%';
+                    strengthBar.style.background = '#f1c40f';
+                    strengthText.textContent = 'Media';
+                    strengthText.style.color = '#f1c40f';
+                } else {
+                    strengthBar.style.width = '100%';
+                    strengthBar.style.background = '#2ecc71';
+                    strengthText.textContent = 'Fuerte';
+                    strengthText.style.color = '#2ecc71';
+                }
+
+                if (PASS_REGEX.test(val)) {
+                    passStatus.style.color = "var(--success-green)";
+                    passStatus.innerHTML = '<i class="fas fa-check-circle"></i> Cumple todos los requisitos';
+                } else {
+                    passStatus.style.color = "var(--error-red)";
+                    passStatus.innerHTML = '<i class="fas fa-times-circle"></i> Req: 8+ caract., mayúscula, minúscula, número, símbolo';
+                }
+                validateForm();
+            });
+
+            togglePass.addEventListener('click', function () {
+                const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        });
+    </script>
+</body>
+
+</html>

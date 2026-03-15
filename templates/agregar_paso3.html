@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Mecánica</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <style>
+        /* --- BASE --- */
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* --- OVERLAY MÓVIL --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- ÁREA DE CONTENIDO --- */
+        .content-area {
+            margin-left: 280px;
+            padding: 40px;
+            transition: margin-left 0.4s;
+        }
+
+        /* --- ESTILOS DEL FORMULARIO (ESTILO HTML 1) --- */
+        body {
+            opacity: 0;
+            animation: fadeInPage 0.4s forwards;
+        }
+
+        @keyframes fadeInPage {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.07);
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #f0f0f0;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .step-item {
+            color: #bdc3c7;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-item.active {
+            color: #3498db;
+            position: relative;
+        }
+
+        .step-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #3498db;
+            border-radius: 2px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            color: #34495e;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #dcdde1;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid #f8f9fa;
+        }
+
+        /* Botones coherentes con HTML 1 */
+        .btn-volver {
+            background: #f1f2f6;
+            color: #57606f;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .btn-finalizar {
+            background: #27ae60;
+            color: white;
+            padding: 14px 35px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        .error-help {
+            color: #e74c3c;
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: block;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 80px;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'flota' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+
+            <header style="margin-bottom: 35px;">
+                <h1 style="font-size: 2rem; color: #2c3e50; margin: 0; font-weight: 800; letter-spacing: -0.5px;">
+                    Registro Integral de Equipo</h1>
+                <p style="color: #7f8c8d; font-size: 1rem; margin-top: 5px;">Configure las especificaciones técnicas
+                    finales del activo.</p>
+            </header>
+
+            <div class="form-container">
+                <a href="{{ url_for('flota.gestion_flota') }}" class="header-link">
+                    <i class="fas fa-arrow-left"></i> Cancelar y Volver al listado
+                </a>
+                <div class="step-header">
+                    <div class="step-item">1. Datos Generales</div>
+                    <div class="step-item">2. Identificación</div>
+                    <div class="step-item active">3. Info. Mecánica</div>
+                </div>
+
+                <form action="{{ url_for('flota.agregar_paso3') }}" method="POST">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+
+                        <div class="form-group">
+                            <label>Tipo de Transmisión</label>
+                            <select name="tipo_transmision" id="tipo_transmision" class="form-control" required>
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option value="MANUAL">MANUAL</option>
+                                <option value="AUTOMATICA">AUTOMÁTICA</option>
+                                <option value="HIDROSTATICA">HIDROSTÁTICA</option>
+                                <option value="POWERSHIFT">POWERSHIFT</option>
+                                <option value="SINCRONIZADA">SINCRONIZADA</option>
+                                <option value="ELECTRICA">ELÉCTRICA</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Número de Ejes</label>
+                            <select name="nro_eje" id="nro_eje" class="form-control" required>
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option value="1">1 Eje</option>
+                                <option value="2">2 Ejes</option>
+                                <option value="3">3 Ejes</option>
+                                <option value="4">4 Ejes</option>
+                                <option value="5">5 Ejes</option>
+                                <option value="6">6+ Ejes</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Número de Ruedas</label>
+                            <select name="nro_ruedas" id="nro_ruedas" class="form-control" required>
+                                <option value="" disabled selected>Seleccione...</option>
+                                <option value="0">0 (Orugas)</option>
+                                <option value="4">4 Ruedas</option>
+                                <option value="6">6 Ruedas</option>
+                                <option value="10">10 Ruedas</option>
+                                <option value="12">12 Ruedas</option>
+                                <option value="18">18 Ruedas</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Potencia (HP)</label>
+                            <input type="number" name="potencia" class="form-control" placeholder="Ej: 350" min="50"
+                                max="2500" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Capacidad Tanque (Litros)</label>
+                            <input type="number" step="1" name="tanque" class="form-control" placeholder="Ej: 150"
+                                min="25" max="1500" required>
+                            <small class="error-help">Mínimo 25 litros.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Código de Neumáticos</label>
+                            <input type="text" name="codigo_neumaticos" id="codigo_neumaticos" class="form-control"
+                                style="text-transform: uppercase;" placeholder="Ej: 295/80R22.5" required minlength="4"
+                                maxlength="20">
+                        </div>
+
+                        <!-- ASIGNACIÓN DE OPERADORES AL EQUIPO -->
+                        <div class="form-group full-width" style="margin-top: 20px;">
+                            <label
+                                style="font-size: 0.85rem; color: #7f8c8d; margin-bottom: 15px; text-transform: uppercase; font-weight: 700;">Seleccione
+                                los Operadores Asignados</label>
+                            <div class="op-grid">
+                                {% for op in operadores %}
+                                <div class="op-card" onclick="toggleOperator(this)">
+                                    <input type="checkbox" name="operadores" class="op-checkbox"
+                                        value="{{ op.id_operador }}">
+                                    <div class="op-icon"><i class="fas fa-user-tie"></i></div>
+                                    <div class="op-name">{{ op.nombres }} {{ op.apellidos }}</div>
+                                    <div class="op-id">ID: #{{ op.id_operador }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <a href="{{ url_for('flota.agregar_paso2') }}" class="btn-volver">
+                            <span style="margin-right: 8px;"></span> Paso Anterior
+                        </a>
+                        <button type="submit" class="btn-finalizar">
+                            Finalizar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* Lógica Sidebar */
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+
+        /* Lógica de filtrado de opciones por categoría */
+        document.addEventListener('DOMContentLoaded', function () {
+            const cat = "{{ session.get('reg_equipo', {}).get('categoria', '') }}".toLowerCase().trim();
+            const selTrans = document.getElementById('tipo_transmision');
+            const selEjes = document.getElementById('nro_eje');
+            const selRuedas = document.getElementById('nro_ruedas');
+
+            const reglas = {
+                'liviana': { transmisiones: ['AUTOMATICA', 'MANUAL'], ejes: ['2'], ruedas: ['4'] },
+                'pesada': { transmisiones: ['SINCRONIZADA', 'MANUAL'], ejes: ['3', '4'], ruedas: ['10', '12'] },
+                'maquinaria': { transmisiones: ['HIDROSTATICA'], ejes: ['2'], ruedas: ['0', '4'] }
+            };
+
+            function filtrarOpciones(selectElement, valoresPermitidos) {
+                Array.from(selectElement.options).forEach(option => {
+                    if (option.value === "" || valoresPermitidos.includes(option.value)) {
+                        option.style.display = 'block';
+                        option.disabled = false;
+                    } else {
+                        option.style.display = 'none';
+                        option.disabled = true;
+                    }
+                });
+                if (selectElement.value !== "" && !valoresPermitidos.includes(selectElement.value)) {
+                    selectElement.selectedIndex = 0;
+                }
+            }
+
+            if (reglas[cat]) {
+                filtrarOpciones(selTrans, reglas[cat].transmisiones);
+                filtrarOpciones(selEjes, reglas[cat].ejes);
+                filtrarOpciones(selRuedas, reglas[cat].ruedas);
+            }
+        });
+
+        function toggleOperator(card) {
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            card.classList.toggle('selected', checkbox.checked);
+        }
+    </script>
+</body>
+
+</html>

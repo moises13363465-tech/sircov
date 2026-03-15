@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Registro de Equipo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <style>
+        /* --- BASE --- */
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+        }
+
+        /* --- OVERLAY MÓVIL --- */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- ÁREA DE CONTENIDO --- */
+        .content-area {
+            margin-left: 280px;
+            padding: 40px;
+            transition: margin-left 0.4s;
+        }
+
+        body {
+            opacity: 0;
+            animation: fadeInPage 0.4s forwards;
+        }
+
+        @keyframes fadeInPage {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.07);
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #f0f0f0;
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .step-item {
+            color: #bdc3c7;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step-item.active {
+            color: #3498db;
+            position: relative;
+        }
+
+        .step-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #3498db;
+            border-radius: 2px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 700;
+            color: #34495e;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #dcdde1;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+        }
+
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid #f8f9fa;
+        }
+
+        .btn-volver {
+            background: #f1f2f6;
+            color: #57606f;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .btn-siguiente {
+            background: #27ae60;
+            color: white;
+            padding: 14px 35px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+        }
+
+        .info-box {
+            background: #eef7ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            color: #2980b9;
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: block;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 80px;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'flota' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <div class="content-area">
+        <div class="container">
+            <header style="margin-bottom: 35px;">
+                <h1 style="font-size: 2rem; color: #2c3e50; margin: 0; font-weight: 800; letter-spacing: -0.5px;">
+                    Registro Integral de Equipo</h1>
+                <p style="color: #7f8c8d; font-size: 1rem; margin-top: 5px;">Configure la categorización técnica del
+                    activo para habilitar los pasos siguientes.</p>
+            </header>
+
+            <div class="form-container">
+                <a href="{{ url_for('flota.gestion_flota') }}" class="header-link">
+                    <i class="fas fa-arrow-left"></i> Volver al listado
+                </a>
+                <div class="step-header">
+                    <div class="step-item active">1. Datos Generales</div>
+                    <div class="step-item">2. Identificación</div>
+                    <div class="step-item">3. Info. Mecánica</div>
+                </div>
+
+                <div class="info-box">
+                    <strong>Nota:</strong> Los campos se habilitarán secuencialmente a medida que realice una selección.
+                </div>
+
+                <form action="{{ url_for('flota.agregar_paso1') }}" method="POST">
+                    <div class="form-step active">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+
+                            <div class="form-group">
+                                <label for="categoria">Tipo de Maquinaria</label>
+                                <select name="categoria" id="categoria" class="form-control" onchange="flujoTipo()"
+                                    required>
+                                    <option value="" disabled selected>Seleccione tipo...</option>
+                                    <option value="liviana">Vehículo Liviano</option>
+                                    <option value="pesada">Vehículo Pesado</option>
+                                    <option value="maquinaria">Maquinaria de Construcción</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_subtipo">Subtipo de Activo</label>
+                                <select name="id_subtipo" id="id_subtipo" class="form-control" onchange="flujoSubtipo()"
+                                    required disabled>
+                                    <option value="" disabled selected>Esperando tipo...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_marca">Marca Fabricante</label>
+                                <select name="id_marca" id="id_marca" class="form-control" onchange="flujoMarca()"
+                                    required disabled>
+                                    <option value="" disabled selected>Esperando subtipo...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="id_modelo">Modelo Específico</label>
+                                <select name="id_modelo" id="id_modelo" class="form-control" required disabled>
+                                    <option value="" disabled selected>Esperando marca...</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <div class="form-group" style="margin-top: 30px;">
+                            <label for="observaciones">Observaciones de Recepción</label>
+                            <textarea name="observaciones" id="observaciones" rows="4" class="form-control"
+                                placeholder="Describa brevemente el estado inicial o detalles relevantes del equipo..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <a href="{{ url_for('flota.gestion_flota') }}" class="btn-volver">
+                            <span style="margin-right: 8px;"></span> Cancelar Registro
+                        </a>
+                        <button type="submit" class="btn-siguiente">
+                            Siguiente Paso: Identificación <span style="margin-left: 8px;"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA DEL SIDEBAR ---
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+
+        // --- LÓGICA DE SELECTORES DINÁMICOS CORREGIDA ---
+
+        function flujoTipo() {
+            const catName = document.getElementById('categoria').value;
+            const subSelect = document.getElementById('id_subtipo');
+
+            resetSelects(['id_subtipo', 'id_marca', 'id_modelo']);
+
+            subSelect.innerHTML = '<option value="" disabled selected>⏳ Cargando...</option>';
+
+            fetch(`/flota/get_subtipos/${catName}`)
+                .then(res => res.json())
+                .then(data => {
+                    subSelect.disabled = false;
+                    subSelect.innerHTML = '<option value="" disabled selected>Seleccione Sub-tipo...</option>';
+                    data.forEach(s => {
+                        subSelect.innerHTML += `<option value="${s.id_subtipo}">${s.nombre_subtipo}</option>`;
+                    });
+                })
+                .catch(err => console.error("Error cargando subtipos:", err));
+        }
+
+        function flujoSubtipo() {
+            const selectSub = document.getElementById('id_subtipo');
+            const subId = selectSub.value;
+            const subName = selectSub.options[selectSub.selectedIndex].text;
+            const marcaSelect = document.getElementById('id_marca');
+
+            resetSelects(['id_marca', 'id_modelo']);
+
+            marcaSelect.innerHTML = '<option value="" disabled selected>⏳ Cargando marcas...</option>';
+
+            fetch(`/flota/get_marcas_filtradas/${subId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.length === 0) {
+                        resetSelects(['id_marca', 'id_modelo']);
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Inventario Vacío',
+                            text: `El subtipo "${subName}" no tiene ninguna Marca ni Modelo vinculado en el sistema. Debe ir a Configuración primero para registrarlos.`,
+                            confirmButtonColor: '#f39c12'
+                        });
+                        return;
+                    }
+
+                    marcaSelect.disabled = false;
+                    marcaSelect.innerHTML = '<option value="" disabled selected>Seleccione Marca...</option>';
+                    data.forEach(m => {
+                        marcaSelect.innerHTML += `<option value="${m.id_marca}">${m.nombre}</option>`;
+                    });
+                })
+                .catch(err => console.error("Error cargando marcas:", err));
+        }
+
+        function flujoMarca() {
+            const marcaId = document.getElementById('id_marca').value;
+            const subId = document.getElementById('id_subtipo').value;
+            const modeloSelect = document.getElementById('id_modelo');
+
+            resetSelects(['id_modelo']);
+
+            modeloSelect.innerHTML = '<option value="" disabled selected>⏳ Cargando modelos...</option>';
+
+            fetch(`/flota/get_modelos_filtrados/${marcaId}/${subId}`)
+                .then(res => res.json())
+                .then(data => {
+                    modeloSelect.disabled = false;
+                    modeloSelect.innerHTML = '<option value="" disabled selected>Seleccione Modelo...</option>';
+                    data.forEach(mo => {
+                        modeloSelect.innerHTML += `<option value="${mo.id_modelo}">${mo.nombre_modelo}</option>`;
+                    });
+                })
+                .catch(err => console.error("Error cargando modelos:", err));
+        }
+
+        function resetSelects(ids) {
+            const labels = {
+                'id_subtipo': 'Esperando tipo...',
+                'id_marca': 'Esperando subtipo...',
+                'id_modelo': 'Esperando marca...'
+            };
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.disabled = true;
+                    el.innerHTML = `<option value="" disabled selected>${labels[id]}</option>`;
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

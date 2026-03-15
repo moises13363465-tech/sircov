@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Gestión de Operadores</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+
+    <style>
+        /* --- CONFIGURACIÓN BASE --- */
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            /* Mantiene el scroll interno para sidebar y contenido */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: transparent !important;
+            /* Permitir ver el fondo global */
+        }
+
+        /* --- SIDEBAR CON SCROLL --- */
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 2000;
+            background: white;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #dcdde1;
+            border-radius: 10px;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* --- BOTÓN HAMBURGUESA --- */
+        .menu-trigger {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2500;
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+
+        /* --- ÁREA DE CONTENIDO PRINCIPAL --- */
+        .content-area {
+            margin-left: 280px;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 40px;
+            box-sizing: border-box;
+            transition: all 0.4s ease;
+        }
+
+        /* --- ELEMENTOS DE LA GESTIÓN (TABLA Y HEADER) --- */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .btn-add {
+            background: #2c3e50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .table-card {
+            background: rgba(36, 37, 38, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+        }
+
+        th {
+            text-align: left;
+            padding: 18px 20px;
+            background: rgba(248, 249, 250, 0.05);
+            color: var(--accent-blue);
+            font-weight: 700;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        [data-theme="dark"] th {
+            color: #3498db;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            vertical-align: middle;
+            color: var(--text-main);
+            transition: background 0.2s;
+        }
+
+        [data-theme="dark"] td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover td {
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        /* ESTADOS */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .bg-operativo {
+            background-color: #e8f5e9;
+            color: #27ae60;
+        }
+
+        .bg-disponible {
+            background-color: #e3f2fd;
+            color: #2980b9;
+        }
+
+        .bg-servicio {
+            background-color: #fadbd8;
+            color: #c0392b;
+        }
+
+        /* BOTONES DE ACCIÓN */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-view {
+            background: rgba(52, 152, 219, 0.1);
+            color: #3498db;
+        }
+
+        .btn-edit {
+            background: rgba(44, 62, 80, 0.1);
+            color: #2c3e50;
+        }
+
+        .btn-delete {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+        }
+
+        /* --- CONTENEDOR DE BIENVENIDA (Dashboard) --- */
+        .welcome-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
+            url("{{ url_for('static', filename='img/background_maquinaria.jpg') }}") no-repeat center center;
+            background-size: cover;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-content {
+            margin-left: 280px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            color: #ffffff;
+            width: 100%;
+            max-width: 500px;
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+        }
+
+        /* --- MENÚ MÓVIL Y OVERLAY --- */
+        .menu-trigger {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2500;
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-card {
+            background: white;
+            width: 95%;
+            max-width: 550px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .detail-group label {
+            display: block;
+            font-size: 0.65rem;
+            color: #95a5a6;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .detail-group p {
+            margin: 0;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #f1f1f1;
+            padding-bottom: 5px;
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 260px;
+            }
+
+            .welcome-content {
+                margin-left: 260px;
+                max-width: 400px;
+                padding: 30px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 80px 20px 20px 20px;
+            }
+
+            .welcome-content {
+                margin-left: 0;
+                width: 85%;
+                max-width: none;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .welcome-content {
+                padding: 25px 15px;
+            }
+
+            .welcome-content h1 {
+                font-size: 1.8rem !important;
+            }
+
+            .sidebar {
+                width: 85%;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'operadores' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <main class="content-area">
+        <div class="container">
+            <section class="page-section active">
+                <header class="page-header">
+                    <div>
+                        <h1 class="page-title">Gestión de Operadores</h1>
+                        <div class="page-subtitle">Proyectos Técnicos Oriente, C.A.</div>
+                    </div>
+                    <a href="{{ url_for('operadores.agregar') }}" class="btn-add">
+                        <i class="fas fa-plus-circle"></i> Agregar Nuevo Operador
+                    </a>
+                </header>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <script>
+                    Swal.fire({
+                        icon: '{{ "success" if category == "success" else "error" }}',
+                        title: '{{ "¡Hecho!" if category == "success" else "Error" }}',
+                        text: '{{ message }}',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                </script>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="search-input"
+                        placeholder="Buscar por Cédula, Nombre o Apellido...">
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="tablaOperadores">
+                        <thead>
+                            <tr>
+                                <th>Cédula</th>
+                                <th>Operador</th>
+                                <th>Info</th>
+                                <th>Maquinaria Asignada</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if operadores %}
+                            {% for op in operadores %}
+                            <tr>
+                                <td><strong>{{ op.cedula or 'â€”' }}</strong></td>
+                                <td>{{ op.apellidos|upper or '' }}, {{ op.nombres or '' }}</td>
+                                <td>{{ op.edad or 'â€”' }} años</td>
+                                <td>
+                                    {% if op.maquinarias_asignadas %}
+                                    <span style="font-size: 0.85rem;">
+                                        <i class="fas fa-truck-pickup"></i> {{ op.maquinarias_asignadas }}
+                                    </span>
+                                    {% else %}
+                                    <span style="color: #bdc3c7; font-style: italic;">Sin asignar</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="status-badge 
+                                    {% if op.estado == 'OPERATIVO' %}bg-operativo
+                                    {% elif op.estado == 'DISPONIBLE' %}bg-disponible
+                                    {% else %}bg-servicio{% endif %}">
+                                        {{ op.estado or 'â€”' }}
+                                    </span>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-icon btn-view"
+                                            onclick='openModal({{ op | tojson | safe }})'><i
+                                                class="fas fa-eye"></i></button>
+                                        {% if session.rol == 'admin' %}
+                                        <a href="{{ url_for('operadores.editar', id=op.id_operador) }}"
+                                            class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                        <a href="{{ url_for('operadores.expediente', id=op.id_operador) }}"
+                                            class="btn-icon btn-view" title="Imprimir Expediente">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                        <button class="btn-icon btn-delete"
+                                            onclick='confirmarEliminacion("{{ url_for("operadores.eliminar", id=op.id_operador) }}", "{{ op.nombres | safe if op.nombres else "" }} {{ op.apellidos | safe if op.apellidos else "" }}")'><i
+                                                class="fas fa-trash-alt"></i></button>
+                                        {% else %}
+                                        <button class="btn-icon btn-edit" onclick="noPermissionAlert()"><i
+                                                class="fas fa-edit"></i></button>
+                                        <a href="{{ url_for('operadores.expediente', id=op.id_operador) }}"
+                                            class="btn-icon btn-view" title="Imprimir Expediente">
+                                            <i class="fas fa-print"></i>
+                                        </a>
+                                        <button class="btn-icon btn-delete" onclick="noPermissionAlert()"><i
+                                                class="fas fa-trash-alt"></i></button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align:center; padding:40px; color:#7f8c8d;">
+                                    No hay operadores registrados aún
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+
+                    <div id="noResults" style="display: none; text-align: center; padding: 40px; color: #7f8c8d;">
+                        <i class="fas fa-search-minus"
+                            style="font-size: 2rem; display: block; margin-bottom: 10px;"></i>
+                        No se encontraron resultados para tu búsqueda
+                    </div>
+                </div> <!-- Final de table-wrapper -->
+            </section>
+        </div> <!-- Final de container -->
+    </main>
+
+    <div id="detailsModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 style="margin:0;"><i class="fas fa-id-card"></i> Ficha del Operador</h3>
+                <i class="fas fa-times" onclick="closeModal()" style="cursor:pointer; font-size: 1.2rem;"></i>
+            </div>
+            <div class="modal-body">
+                <div class="detail-group"><label>Nombres</label>
+                    <p id="m-nombres">â€”</p>
+                </div>
+                <div class="detail-group"><label>Apellidos</label>
+                    <p id="m-apellidos">â€”</p>
+                </div>
+                <div class="detail-group"><label>Cédula</label>
+                    <p id="m-cedula">â€”</p>
+                </div>
+                <div class="detail-group"><label>Teléfono</label>
+                    <p id="m-telefono">No registrado</p>
+                </div>
+                <div class="detail-group"><label>Edad</label>
+                    <p id="m-edad">â€”</p>
+                </div>
+                <div class="detail-group"><label>Estado</label>
+                    <p id="m-estado">â€”</p>
+                </div>
+                <div class="detail-group col-span-2"
+                    style="background:#f8f9fa; padding:15px; border-radius:8px; border: 1px dashed #cbd5e0;">
+                    <label>Maquinaria Asignada</label>
+                    <p id="m-maquinaria" style="color:#3498db; font-weight:700; border:none;">Ninguna maquinaria
+                        asignada</p>
+                </div>
+            </div>
+            <div style="padding: 20px; text-align: right; border-top: 1px solid #eee;">
+                <button onclick="closeModal()"
+                    style="padding: 10px 20px; background: #7f8c8d; color: white; border: none; border-radius: 8px; cursor: pointer;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 900) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+
+        // Búsqueda en tiempo real
+        document.getElementById('searchInput').addEventListener('input', function () {
+            const term = this.value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#tablaOperadores tbody tr:not(#noResults)');
+            let hasResults = false;
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const match = text.includes(term);
+                row.style.display = match ? '' : 'none';
+                if (match) hasResults = true;
+            });
+
+            const noRes = document.getElementById('noResults');
+            if (noRes) noRes.style.display = hasResults ? 'none' : 'block';
+        });
+
+        function openModal(op) {
+            document.getElementById('m-nombres').innerText = op.nombres || 'â€”';
+            document.getElementById('m-apellidos').innerText = op.apellidos || 'â€”';
+            document.getElementById('m-cedula').innerText = op.cedula || 'â€”';
+            document.getElementById('m-telefono').innerText = op.telefono || 'No registrado';
+            document.getElementById('m-edad').innerText = op.edad ? op.edad + ' años' : 'â€”';
+            document.getElementById('m-estado').innerText = op.estado || 'â€”';
+
+            const maqInfo = op.maquinarias_asignadas
+                ? op.maquinarias_asignadas
+                : 'Ninguna maquinaria asignada';
+            document.getElementById('m-maquinaria').innerText = maqInfo;
+
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        function confirmarEliminacion(url, nombre) {
+            Swal.fire({
+                title: '¿Eliminar a ' + (nombre.trim() || 'este operador') + '?',
+                text: "Esta acción no se puede deshacer",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e74c3c',
+                cancelButtonColor: '#95a5a6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
+        }
+
+        function noPermissionAlert() {
+            Swal.fire({
+                icon: 'error',
+                title: 'Acceso Denegado',
+                text: 'No tienes permiso para realizar esta acción. Solo el administrador puede editar o eliminar operadores.',
+                confirmButtonColor: '#e74c3c',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    </script>
+</body>
+
+</html>

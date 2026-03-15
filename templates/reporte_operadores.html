@@ -136,7 +136,7 @@
             <header class="page-header">
                 <div>
                     <h1 class="page-title">{{ titulo }}</h1>
-                    <div class="page-subtitle">Pestaña activa: Gestión de Flota Vehicular</div>
+                    <div class="page-subtitle">Pestaña activa: Gestión de Operadores</div>
                 </div>
                 <button onclick="registrarYImprimir()" class="btn-add no-print" style="border:none;">
                     <i class="fas fa-file-pdf"></i> Generar Reporte PDF
@@ -145,10 +145,10 @@
 
             <div class="report-tabs no-print">
                 <a href="{{ url_for('reportes.generar_reporte') }}"
-                    style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--primary, #2c3e50); color: white; display: inline-flex; align-items: center; gap: 8px;">
+                    style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--bg-light, #e2e8f0); color: var(--text-main, #2c3e50); display: inline-flex; align-items: center; gap: 8px;">
                     <i class="fas fa-truck-moving"></i> Flota Vehicular</a>
                 <a href="{{ url_for('reportes.generar_reporte_operadores') }}"
-                    style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--bg-light, #e2e8f0); color: var(--text-main, #2c3e50); display: inline-flex; align-items: center; gap: 8px; margin-left: 10px;">
+                    style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--primary, #2c3e50); color: white; display: inline-flex; align-items: center; gap: 8px; margin-left: 10px;">
                     <i class="fas fa-hard-hat"></i> Operadores</a>
                 <a href="{{ url_for('reportes.generar_reporte_graficos') }}"
                     style="text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; background: var(--bg-light, #e2e8f0); color: var(--text-main, #2c3e50); display: inline-flex; align-items: center; gap: 8px; margin-left: 10px;">
@@ -164,7 +164,7 @@
                     <h2 style="color: var(--text-main); font-weight: 800; font-size: 1.5rem; margin-bottom: 5px;">{{
                         encabezado.institucion if encabezado else 'Proyectos Técnicos Oriente, C.A.' }}</h2>
                     <p style="color: var(--text-muted); font-weight: 600;">{{ encabezado.departamento if encabezado else
-                        'Departamento de control de flota' }}</p>
+                        'Departamento de Operaciones' }}</p>
                     <p class="header-rif">RIF: {{ encabezado.rif if encabezado else 'J-308583022' }}</p>
                     <p style="font-size: 0.8rem; color: #95a5a6; margin-top: 10px; font-weight: bold;">
                         Fecha de emisión: <span id="fecha-actual"></span>
@@ -175,41 +175,30 @@
             <div class="filter-panel no-print">
                 <div class="filter-group" style="display: flex; flex-direction: column; gap: 6px;">
                     <label
-                        style="font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px;">Marca
-                        / Modelo</label>
-                    <select id="sel-marca" onchange="filtrarTabla()"
+                        style="font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px;">Licencia</label>
+                    <select id="sel-licencia" onchange="filtrarTabla()"
                         style="padding: 10px; border-radius: 8px; border: 1px solid #dcdde1; background-color: #f9f9f9; font-size: 0.85rem; color: #2c3e50; font-weight: 600; outline: none; cursor: pointer;">
-                        <option value="">TODOS</option>
-                        {% for m in datos|groupby('nombre_marca') %}
-                        <option value="{{ m.grouper }}">{{ m.grouper }}</option>
-                        {% endfor %}
+                        <option value="">TODAS</option>
+                        <option value="PRIMERA">PRIMERA (1ra)</option>
+                        <option value="SEGUNDA">SEGUNDA (2da)</option>
+                        <option value="TERCERA">TERCERA (3ra)</option>
+                        <option value="CUARTA">CUARTA (4ta)</option>
+                        <option value="QUINTA">QUINTA (5ta)</option>
+                        <option value="NO POSEE">NO POSEE</option>
                     </select>
                 </div>
 
                 <div class="filter-group" style="display: flex; flex-direction: column; gap: 6px;">
                     <label
-                        style="font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px;">Operatividad</label>
+                        style="font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px;">Estado</label>
                     <select id="sel-estado" onchange="filtrarTabla()"
                         style="padding: 10px; border-radius: 8px; border: 1px solid #dcdde1; background-color: #f9f9f9; font-size: 0.85rem; color: #2c3e50; font-weight: 600; outline: none; cursor: pointer;">
                         <option value="">TODOS</option>
-                        <option value="OPERATIVO">OPERATIVO</option>
-                        <option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option>
-                        <option value="EN MANTENIMIENTO">EN MANTENIMIENTO</option>
-                    </select>
-                </div>
-
-                <div class="filter-group" style="display: flex; flex-direction: column; gap: 6px;">
-                    <label
-                        style="font-size: 0.7rem; font-weight: 800; color: #95a5a6; text-transform: uppercase; letter-spacing: 0.5px;">Tipo
-                        de Maquinaria</label>
-                    <select id="sel-tipo" onchange="filtrarTabla()"
-                        style="padding: 10px; border-radius: 8px; border: 1px solid #dcdde1; background-color: #f9f9f9; font-size: 0.85rem; color: #2c3e50; font-weight: 600; outline: none; cursor: pointer;">
-                        <option value="">TODOS</option>
-                        {% for t in datos|groupby('categoria') %}
-                        {% if t.grouper %}
-                        <option value="{{ t.grouper }}">{{ t.grouper|upper }}</option>
-                        {% endif %}
-                        {% endfor %}
+                        <option value="ACTIVO">ACTIVO</option>
+                        <option value="INACTIVO">INACTIVO</option>
+                        <option value="REPOSO">REPOSO</option>
+                        <option value="PERMISO">PERMISO</option>
+                        <option value="SUSPENDIDO">SUSPENDIDO</option>
                     </select>
                 </div>
             </div>
@@ -218,40 +207,35 @@
                 <table id="tabla-reporte">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Subtipo / Modelo</th>
-                            <th>Matrícula / Placa</th>
-                            <th>Tipo</th>
-                            <th>Tanque</th>
-                            <th>Capacidad</th>
+                            <th>Identificación</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Teléfono</th>
+                            <th>Edad</th>
+                            <th>Licencia (Grado)</th>
                             <th style="text-align: center;">Estado</th>
                         </tr>
                     </thead>
                     <tbody id="reportTableBody">
                         {% for fila in datos %}
                         <tr class="report-row">
-                            <td style="font-weight: bold; color: var(--accent-blue);">#{{ fila.id_maquinaria }}</td>
-                            <td class="c-marca">
-                                <strong style="color: var(--text-main);">{{ fila.nombre_marca }}</strong><br>
-                                <small style="color: var(--text-muted)">{{ fila.nombre_modelo }}</small>
+                            <td style="font-weight: bold; color: var(--accent-blue);">{{ fila.cedula }}</td>
+                            <td>
+                                <strong style="color: var(--text-main);">{{ fila.nombres }}</strong><br>
+                                <small style="color: var(--text-muted)">{{ fila.apellidos }}</small>
                             </td>
-                            <td style="font-weight: 600;">{{ fila.placa or 'S/P' }}</td>
-                            <td
-                                style="font-weight: 700; font-size: 0.85rem; color: var(--text-main); padding: 15px; border-bottom: 1px solid var(--border-color);">
-                                {{ fila.categoria or '-' }}
-                            </td>
-                            <td class="c-tanque">{{ fila.tanque or '0' }} Gal</td>
-                            <td class="c-potencia">{{ fila.potencia or '0' }} HP</td>
+                            <td>{{ fila.telefono or '-' }}</td>
+                            <td>{{ fila.edad or '-' }} años</td>
+                            <td class="c-licencia">{{ fila.tipo_licencia or 'No posee' }}</td>
                             <td style="text-align: center;">
                                 <span class="status-pill c-estado">{{ fila.estado }}</span>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 50px;">
-                                <i class="fas fa-folder-open"
+                            <td colspan="6" style="text-align: center; padding: 50px;">
+                                <i class="fas fa-id-badge"
                                     style="font-size: 3rem; color: #dcdde1; display: block; margin-bottom: 15px;"></i>
-                                No hay datos de flota para mostrar.
+                                No hay datos de operadores para mostrar.
                             </td>
                         </tr>
                         {% endfor %}
@@ -288,20 +272,17 @@
         });
 
         function filtrarTabla() {
-            const marca = document.getElementById('sel-marca').value.toUpperCase();
+            const licencia = document.getElementById('sel-licencia').value.toUpperCase();
             const estado = document.getElementById('sel-estado').value.toUpperCase();
-            const tipo = document.getElementById('sel-tipo').value.toUpperCase();
 
             const rows = document.querySelectorAll('.report-row');
 
             rows.forEach(row => {
-                const tMarca = row.querySelectorAll('td')[1].innerText.toUpperCase();
+                const tLicencia = row.querySelector('.c-licencia').innerText.toUpperCase();
                 const tEstado = row.querySelector('.c-estado').innerText.toUpperCase();
-                const tTipo = row.querySelectorAll('td')[3].innerText.toUpperCase();
 
-                const mostrar = (marca === "" || tMarca.includes(marca)) &&
-                    (estado === "" || tEstado === estado) &&
-                    (tipo === "" || tTipo.includes(tipo));
+                const mostrar = (licencia === "" || tLicencia.includes(licencia)) &&
+                    (estado === "" || tEstado === estado);
 
                 row.style.display = mostrar ? "" : "none";
             });
@@ -312,7 +293,7 @@
             fetch("{{ url_for('reportes.log_impresion') }}", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tipo: "Flota" })
+                body: JSON.stringify({ tipo: "Operadores" })
             }).then(() => {
                 window.print();
             }).catch(() => {
@@ -324,9 +305,9 @@
         // Colores de los estados
         document.querySelectorAll('.c-estado').forEach(span => {
             const estado = span.textContent.trim().toUpperCase();
-            if (estado === 'OPERATIVO') span.classList.add('bg-operativo');
-            else if (estado === 'FUERA DE SERVICIO') span.classList.add('bg-fuera');
-            else if (estado === 'EN MANTENIMIENTO') span.classList.add('bg-mantenimiento');
+            if (estado === 'ACTIVO' || estado === 'OPERATIVO') span.classList.add('bg-activo');
+            else if (estado === 'INACTIVO' || estado === 'SUSPENDIDO') span.classList.add('bg-inactivo');
+            else if (estado === 'REPOSO' || estado === 'PERMISO') span.classList.add('bg-mantenimiento');
             else span.classList.add('bg-inactivo');
         });
     </script>

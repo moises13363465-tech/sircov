@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIRCOV - Configuración del Sistema</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style2.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* --- ESTILOS HEREDADOS DEL SIDEBAR PROFESIONAL --- */
+        body,
+        html {
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100vh;
+            width: 100vw;
+            background-color: #f4f7f6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 2000;
+            background: white;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .menu-trigger {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 2500;
+            background: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+            backdrop-filter: blur(3px);
+        }
+
+        .content-area {
+            margin-left: 280px;
+            padding: 40px;
+            transition: margin-left 0.4s ease;
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+            margin-bottom: 40px;
+        }
+
+        .config-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .config-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .config-icon {
+            font-size: 2.5rem;
+        }
+
+        .config-info h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .config-info p {
+            margin: 5px 0 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            margin: 30px 0 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-config {
+            margin-top: 15px;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            text-align: center;
+            transition: 0.3s;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-blue {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .btn-blue:hover {
+            background: #34495e;
+        }
+
+        .btn-outline {
+            border: 1px solid #3498db;
+            color: #3498db;
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .badge-admin {
+            background: rgba(231, 76, 60, 0.1);
+            color: #e74c3c;
+            padding: 4px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .btn-delete-x {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-delete-x:hover {
+            background-color: #a71d2a;
+        }
+
+        /* Badges del Catálogo */
+        .type-badge {
+            background: #ecf0f1;
+            color: #7f8c8d;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .category-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .cat-liviana {
+            background: #3498db;
+            color: white;
+        }
+
+        .cat-pesada {
+            background: #e67e22;
+            color: white;
+        }
+
+        .cat-maquinaria {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background-color: #f8f9fa;
+        }
+
+        .results-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid #eee;
+        }
+
+        .scroll-list-wrapper {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+            border: 1px solid #f1f1f1;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #eee;
+            color: #7f8c8d;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+        }
+
+        .preview-header-box {
+            border: 2px dashed #bdc3c7;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #fafafa;
+        }
+
+        @media print {
+
+            .sidebar,
+            .menu-trigger,
+            .overlay,
+            .btn-logout-visual,
+            .sidebar-footer,
+            #menu-config,
+            button,
+            .alert,
+            .badge-admin,
+            .btn-delete-x,
+            form,
+            header button,
+            #marcas-modelos,
+            #encabezados-reportes {
+                display: none !important;
+            }
+
+            .content-area {
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+
+            .page-section {
+                display: none;
+            }
+
+            #historial-fechas.active {
+                display: block !important;
+            }
+
+            .scroll-list-wrapper {
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            .results-container {
+                border: none !important;
+                padding: 0 !important;
+            }
+
+            table {
+                border: 1px solid #000;
+            }
+
+            th,
+            td {
+                border: 1px solid #000 !important;
+                color: black !important;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .menu-trigger {
+                display: block;
+            }
+
+            .content-area {
+                margin-left: 0;
+                padding: 80px 20px 20px 20px;
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+</head>
+
+<body class="modulo">
+    {% set active_page = 'configuracion' %}
+
+    {% include 'components/sidebar.html' %}
+
+    <main class="content-area">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}"
+                style="padding: 15px; margin-bottom: 20px; border-radius: 8px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <section id="menu-config" class="page-section active">
+                <header class="page-header">
+                    <div>
+                        <h1 class="page-title">Configuración del Sistema</h1>
+                        <div class="page-subtitle">Administre los parámetros globales y formatos del sistema SIRCOV.
+                        </div>
+                    </div>
+                </header>
+
+                <h2 class="section-title"><i class="fas fa-tools"></i> Panel Administrativo <span
+                        class="badge-admin">Acceso Total</span></h2>
+
+                <div class="config-grid">
+                    <!-- TARJETA MODO OSCURO -->
+                    <div class="config-card">
+                        <div class="config-header">
+                            <i class="fas fa-palette config-icon" style="color: #3498db;"></i>
+                            <div class="config-info">
+                                <h3>Apariencia Visual</h3>
+                                <p>Activar o desactivar el Modo Oscuro global.</p>
+                            </div>
+                        </div>
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color);">
+                            <label for="dark-mode-toggle"
+                                style="font-weight: bold; color: var(--text-main); cursor: pointer;">
+                                Usar Modo Oscuro
+                            </label>
+                            <label class="switch">
+                                <input type="checkbox" id="dark-mode-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-header">
+                            <i class="fas fa-tags config-icon" style="color: #27ae60;"></i>
+                            <div class="config-info">
+                                <h3>Catálogo de Marcas y Modelos</h3>
+                                <p>Actualizar lista de fabricantes y modelos.</p>
+                            </div>
+                        </div>
+                        <button onclick="showSection('marcas-modelos')" class="btn-config btn-outline">Gestionar
+                            Catálogo</button>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-header">
+                            <i class="fas fa-file-invoice config-icon" style="color: #e67e22;"></i>
+                            <div class="config-info">
+                                <h3>Encabezados de Reportes</h3>
+                                <p>Personalizar membretes y títulos oficiales.</p>
+                            </div>
+                        </div>
+                        <button onclick="showSection('encabezados-reportes')" class="btn-config btn-outline">Editar
+                            Formatos</button>
+                    </div>
+
+                    <div class="config-card">
+                        <div class="config-header">
+                            <i class="fas fa-history config-icon" style="color: #9b59b6;"></i>
+                            <div class="config-info">
+                                <h3>Historial de Actividades</h3>
+                                <p>Ver bitácora de fechas y actividades del sistema.</p>
+                            </div>
+                        </div>
+                        <button onclick="showSection('historial-fechas')" class="btn-config btn-outline">Ver
+                            Historial</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="historial-fechas" class="page-section">
+                <header
+                    style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <button onclick="showSection('menu-config')"
+                            style="background:none; border:none; color:#3498db; cursor:pointer; font-weight:bold; margin-bottom:10px;">â†
+                            Volver a Configuración</button>
+                        <h1 style="font-size: 1.6rem; color: #2c3e50; font-weight: bold;">Historial de Actividades</h1>
+                    </div>
+
+                    <button onclick="imprimirHistorial()" class="btn-config btn-blue"
+                        style="background-color: #e74c3c;">
+                        <i class="fas fa-file-pdf"></i> Imprimir Historial
+                    </button>
+                </header>
+
+                <div class="results-container">
+                    <div class="scroll-list-wrapper">
+                        <table id="tabla-historial-print">
+                            <thead>
+                                <tr>
+                                    <th>Acción</th>
+                                    <th>Detalle</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if historial %}
+                                {% for registro in historial %}
+                                <tr>
+                                    <td><strong>{{ registro.accion }}</strong></td>
+                                    <td style="font-size: 0.85rem; color: #555;">{{ registro.detalle }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" style="text-align: center;">No hay historial de registros
+                                        disponible.</td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="marcas-modelos" class="page-section">
+                <header style="margin-bottom: 20px;">
+                    <button onclick="showSection('menu-config')"
+                        style="background:none; border:none; color:#3498db; cursor:pointer; font-weight:bold; margin-bottom:10px;">←
+                        Volver a Configuración</button>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; margin-bottom: 25px;">
+                        <h1 style="font-size: 1.6rem; color: #2c3e50; font-weight: bold; margin: 0;">Catálogo de Marcas
+                            y Modelos</h1>
+                        <!-- Pestañas de Navegación -->
+                        <div class="main-tabs-container">
+                            <button id="btn-tab-agregar" class="main-tab-btn active"
+                                onclick="switchTabConfig('agregar')">
+                                <i class="fas fa-plus-circle"></i> Agregar al Catálogo
+                            </button>
+                            <button id="btn-tab-eliminar" class="main-tab-btn" onclick="switchTabConfig('eliminar')">
+                                <i class="fas fa-edit"></i> Edición de Catálogo
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- INICIO ZONA AGREGAR -->
+                <div id="zona-agregar">
+
+                    <div class="config-grid" style="margin-bottom: 30px;">
+                        <!-- Formulario Nuevo Modelo AMARRADO -->
+                        <div class="config-card">
+                            <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem;"><i
+                                    class="fas fa-plus-circle" style="color:#3498db;"></i> Agregar Marca y Modelo</h3>
+                            <form action="{{ url_for('agregar_catalogo') }}" method="POST">
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>1. Seleccione el Subtipo de Maquinaria</label>
+                                    <select name="id_subtipo" required
+                                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 0.9rem;">
+                                        <option value="">Despliegue para seleccionar...</option>
+                                        {% for tipo_maestro, subtipos in subtipos_disponibles|groupby('nombre_tipo') %}
+                                        <optgroup label="{{ subtipos[0].categoria|upper }} - {{ tipo_maestro }}">
+                                            {% for st in subtipos %}
+                                            <option value="{{ st.id_subtipo }}">{{ st.nombre_subtipo }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-row"
+                                    style="margin-bottom: 15px; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div class="form-group">
+                                        <label>2. Marca</label>
+                                        <select name="marca_select" id="marca_select" required
+                                            onchange="toggleNuevaMarca()"
+                                            style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 0.95rem; background: var(--bg-card); color: var(--text-color);">
+                                            <option value="" disabled selected>Seleccione marca existente...</option>
+                                            {% for mb in marcas_lista %}
+                                            <option value="{{ mb.nombre }}">{{ mb.nombre }}</option>
+                                            {% endfor %}
+                                            <option value="OTRA" style="font-weight: bold; color: #e74c3c;">+ AGREGAR
+                                                OTRA MARCA (NUEVA)</option>
+                                        </select>
+                                        <input type="text" name="marca" id="marca_input"
+                                            placeholder="Escriba la nueva marca..."
+                                            style="display: none; margin-top: 10px; width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed #3498db; font-size: 0.95rem;">
+                                        <script>
+                                            function toggleNuevaMarca() {
+                                                const select = document.getElementById('marca_select');
+                                                const input = document.getElementById('marca_input');
+                                                if (select.value === 'OTRA') {
+                                                    input.style.display = 'block';
+                                                    input.required = true;
+                                                } else {
+                                                    input.style.display = 'none';
+                                                    input.required = false;
+                                                }
+                                            }
+                                        </script>
+                                    </div>
+                                    <div class="form-group"><label>3. Modelo</label><input type="text" name="modelo"
+                                            placeholder="Ej: 320D" required
+                                            style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-config btn-blue" style="width: 100%;">Vincular y
+                                    Guardar
+                                    Registro</button>
+                            </form>
+                        </div>
+
+                        <!-- Formulario Nuevo Subtipo -->
+                        <div class="config-card">
+                            <h3 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1rem;"><i
+                                    class="fas fa-sitemap" style="color:#9b59b6;"></i> Crear Nuevo Subtipo</h3>
+                            <form action="{{ url_for('agregar_subtipo') }}" method="POST">
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label>1. Categoría Mayor / Tipo Maestro</label>
+                                    <select name="id_tipo_maquinaria" required
+                                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 0.9rem;">
+                                        <option value="">Seleccione a dónde pertenecerá...</option>
+                                        {% for tm in tipos_maestros %}
+                                        {% if tm.nombre_tipo != 'GENERAL / OTROS' %}
+                                        <option value="{{ tm.id_tipo_maquinaria }}">{{ tm.categoria|upper }} - {{
+                                            tm.nombre_tipo }}</option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 25px;">
+                                    <label>2. Nombre del Nuevo Subtipo</label>
+                                    <input type="text" name="nombre_subtipo" placeholder="Ej: Compactadora de Rodillo"
+                                        required
+                                        style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
+                                </div>
+                                <button type="submit" class="btn-config btn-outline"
+                                    style="width: 100%; margin-top: 13px;">Registrar Subtipo</button>
+                            </form>
+                        </div>
+                    </div>
+                </div> <!-- FIN ZONA AGREGAR -->
+
+                <!-- ================= ZONA ELIMINAR ================= -->
+                <div id="zona-eliminar" style="display: none;">
+
+                    <!-- Sub-pestañas de Gestión de Edición -->
+                    <div class="subtabs-container"
+                        style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px;">
+                        <button id="btn-subtab-modelos" class="subtab-btn active"
+                            onclick="switchSubTabEdit('modelos')" data-color="#3498db"><i class="fas fa-car"></i>
+                            Editar Modelos</button>
+                        <button id="btn-subtab-subtipos" class="subtab-btn" onclick="switchSubTabEdit('subtipos')"
+                            data-color="#3498db"><i class="fas fa-sitemap"></i> Editar Subtipos</button>
+                        <button id="btn-subtab-marcas" class="subtab-btn" onclick="switchSubTabEdit('marcas')"
+                            data-color="#3498db"><i class="fas fa-tags"></i> Editar Marcas</button>
+                    </div>
+
+                    <!-- SUB-PANELES -->
+
+                    <!-- 1. TABLA MODELOS (Por defecto visible) -->
+                    <div id="subtab-modelos">
+                        <div class="subtab-header-box">
+                            <h3 style="margin:0;"><i class="fas fa-car" style="color:#e74c3c;"></i> Gestión de Modelos
+                                Existentes</h3>
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="busqueda-modelos" class="subtab-search-input"
+                                    onkeyup="filtrarTabla('busqueda-modelos', 'tabla-modelos')"
+                                    placeholder="Buscar por marca o modelo...">
+                            </div>
+                        </div>
+                        <div class="results-container">
+                            <div class="scroll-list-wrapper">
+                                <table id="tabla-modelos">
+                                    <thead>
+                                        <tr>
+                                            <th>Marca</th>
+                                            <th>Modelo</th>
+                                            <th>Subtipo</th>
+                                            <th>Tipo Maestro</th>
+                                            <th style="text-align: center;">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if catalogo %}
+                                        {% for item in catalogo %}
+                                        <tr>
+                                            <td>{{ item.marca }}</td>
+                                            <td><strong>{{ item.modelo }}</strong></td>
+                                            <td>{{ item.subtipo }}</td>
+                                            <td>{{ item.tipo }}</td>
+                                            <td style="display: flex; justify-content: center;">
+                                                <button class="btn-edit-pencil"
+                                                    onclick="editModel({{ item.id_modelo }}, '{{ item.modelo }}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="5" style="text-align: center;">No hay datos disponibles en el
+                                                catálogo.</td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. TABLA SUBTIPOS (Por defecto oculto) -->
+                    <div id="subtab-subtipos" style="display: none;">
+                        <div class="subtab-header-box">
+                            <h3 style="margin:0;"><i class="fas fa-sitemap" style="color:#9b59b6;"></i> Gestión de
+                                Subtipos del Sistema</h3>
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="busqueda-subtipos" class="subtab-search-input"
+                                    onkeyup="filtrarTabla('busqueda-subtipos', 'tabla-subtipos')"
+                                    placeholder="Buscar subtipo...">
+                            </div>
+                        </div>
+                        <div class="results-container" style="padding: 0; overflow: hidden; border: 1px solid #eee;">
+                            <div class="scroll-list-wrapper"
+                                style="max-height: 400px; overflow-y: auto; padding: 15px;">
+                                <table id="tabla-subtipos" style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre del Subtipo</th>
+                                            <th>Tipo Maestro</th>
+                                            <th style="text-align: center;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for st in subtipos_disponibles %}
+                                        <tr>
+                                            <td><strong>{{ st.nombre_subtipo }}</strong></td>
+                                            <td>{{ st.nombre_tipo }}</td>
+                                            <td style="display: flex; justify-content: center;">
+                                                <button class="btn-edit-pencil purple"
+                                                    onclick="editSubtype({{ st.id_subtipo }}, '{{ st.nombre_subtipo }}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. TABLA MARCAS (Por defecto oculto) -->
+                    <div id="subtab-marcas" style="display: none;">
+                        <div class="subtab-header-box">
+                            <h3 style="margin:0;"><i class="fas fa-tags" style="color:#27ae60;"></i> Gestión de Marcas
+                                Registradas</h3>
+                            <div class="search-input-wrapper">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" id="busqueda-marcas" class="subtab-search-input"
+                                    onkeyup="filtrarTabla('busqueda-marcas', 'tabla-marcas')"
+                                    placeholder="Buscar por marca...">
+                            </div>
+                        </div>
+                        <div class="results-container" style="padding: 0; overflow: hidden; border: 1px solid #eee;">
+                            <div class="scroll-list-wrapper"
+                                style="max-height: 400px; overflow-y: auto; padding: 15px;">
+                                <table id="tabla-marcas" style="width: 100%;">
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre de Marca Registrada</th>
+                                            <th style="text-align: center;">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for ma in marcas_lista %}
+                                        <tr>
+                                            <td><strong>{{ ma.nombre }}</strong></td>
+                                            <td style="display: flex; justify-content: center;">
+                                                <button class="btn-edit-pencil green"
+                                                    onclick="editBrand({{ ma.id_marca }}, '{{ ma.nombre }}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div> <!-- FIN ZONA ELIMINAR -->
+
+            </section>
+
+            <section id="encabezados-reportes" class="page-section">
+                <header style="margin-bottom: 20px;">
+                    <button onclick="showSection('menu-config')"
+                        style="background:none; border:none; color:#3498db; cursor:pointer; font-weight:bold; margin-bottom:10px;">â†
+                        Volver a Configuración</button>
+                    <h1 style="font-size: 1.6rem; color: #2c3e50; font-weight: bold;">Personalización de Reportes</h1>
+                </header>
+
+                <div class="config-grid">
+                    <div class="config-card">
+                        <form action="{{ url_for('configurar_membrete') }}" method="POST">
+                            <h3 style="color: #2c3e50; margin-bottom: 15px;">Información de la Institución</h3>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>Nombre de la Institución</label>
+                                <input type="text" name="institucion"
+                                    value="{{ reporte.institucion if reporte else '' }}" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>Departamento</label>
+                                <input type="text" name="departamento"
+                                    value="{{ reporte.departamento if reporte else '' }}" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>RIF</label>
+                                <input type="text" name="rif" value="{{ reporte.rif if reporte else '' }}" required>
+                            </div>
+                            <button type="submit" class="btn-config btn-blue" style="width: 100%;">Guardar
+                                Información</button>
+                        </form>
+                    </div>
+
+                    <div class="config-card">
+                        <form action="{{ url_for('subir_logo_reporte') }}" method="POST" enctype="multipart/form-data">
+                            <h3 style="color: #2c3e50; margin-bottom: 15px;">Logo Oficial del Reporte</h3>
+                            <div
+                                style="text-align: center; border: 1px solid #eee; padding: 15px; border-radius: 10px; margin-bottom: 15px; background: white;">
+                                <img id="report-logo-img" src="{{ url_for('static', filename='img/logo_reporte.png') }}"
+                                    style="max-height: 110px; max-width: 100%; object-fit: contain;">
+                            </div>
+                            <div class="form-group">
+                                <label>Cambiar imagen de reporte (.png)</label>
+                                <input type="file" name="file_logo" accept=".png, .jpg, .jpeg">
+                            </div>
+                            <button type="submit" class="btn-config btn-outline" style="width: 100%;">Actualizar
+                                Logo</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="results-container">
+                    <h3 style="margin-bottom: 15px; color: #2c3e50; font-size: 1rem;">Vista Previa del Membrete (Solo
+                        Reportes)</h3>
+                    <div class="preview-header-box">
+                        <img id="preview-logo-img" src="{{ url_for('static', filename='img/logo_reporte.png') }}"
+                            style="max-height: 90px; max-width: 160px; object-fit: contain;">
+                        <div style="border-left: 2px solid #3498db; padding-left: 20px;">
+                            <div
+                                style="font-weight: bold; color: #2c3e50; font-size: 1.1rem; text-transform: uppercase;">
+                                {{ reporte.institucion if reporte else 'NOMBRE DE INSTITUCIÓN' }}</div>
+                            <div style="color: #7f8c8d; font-size: 0.9rem;">{{ reporte.departamento if reporte else
+                                'DEPARTAMENTO' }}</div>
+                            <div style="color: #2c3e50; font-size: 0.85rem; font-weight: bold; margin-top: 5px;">RIF: {{
+                                reporte.rif if reporte else 'RIF-000000' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        function toggleSidebar() {
+            const sb = document.getElementById('mainSidebar');
+            const overlay = document.getElementById('overlay');
+            sb.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 992) {
+                document.getElementById('mainSidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
+
+        function showSection(sectionId) {
+            const sections = document.querySelectorAll('.page-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            const target = document.getElementById(sectionId);
+            if (target) {
+                target.classList.add('active');
+                window.history.replaceState(null, null, '#' + sectionId);
+            }
+
+            if (window.innerWidth <= 992) {
+                const sb = document.getElementById('mainSidebar');
+                const overlay = document.getElementById('overlay');
+                if (sb.classList.contains('active')) {
+                    toggleSidebar();
+                }
+            }
+        }
+
+        window.addEventListener('load', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                showSection(hash);
+            }
+            // Autoabrir pestaña de eliminación tras redirección
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tab') === 'eliminar') {
+                setTimeout(() => {
+                    if (typeof switchTabConfig === 'function') switchTabConfig('eliminar');
+                }, 100);
+            }
+        });
+
+        function imprimirHistorial() {
+            fetch("{{ url_for('reportes.log_impresion') }}", {
+                method: 'POST'
+            }).then(() => {
+                window.print();
+            }).catch(err => {
+                console.error("Error al registrar log:", err);
+                window.print();
+            });
+        }
+
+        window.addEventListener('load', function () {
+            const defaultLogo = "{{ url_for('static', filename='img/SIRCOV2.png') }}";
+            const reportImg = document.getElementById('report-logo-img');
+            const previewImg = document.getElementById('preview-logo-img');
+
+            if (reportImg) {
+                reportImg.onerror = function () { this.src = defaultLogo; };
+            }
+            if (previewImg) {
+                previewImg.onerror = function () { this.src = defaultLogo; };
+            }
+        });
+
+        // Funciones de SweetAlert2 para reemplazo de confirm()
+
+        // --- NUEVAS FUNCIONES DE UX PARA EDICIÓN ---
+        function switchSubTabEdit(tab) {
+            // Ocultar todos los sub-paneles
+            document.getElementById('subtab-modelos').style.display = 'none';
+            document.getElementById('subtab-subtipos').style.display = 'none';
+            document.getElementById('subtab-marcas').style.display = 'none';
+
+            // Quitar clase activa a todos los botones
+            const btnModelos = document.getElementById('btn-subtab-modelos');
+            const btnSubtipos = document.getElementById('btn-subtab-subtipos');
+            const btnMarcas = document.getElementById('btn-subtab-marcas');
+
+            btnModelos.classList.remove('active');
+            btnSubtipos.classList.remove('active');
+            btnMarcas.classList.remove('active');
+
+            // Mostrar el panel seleccionado
+            document.getElementById('subtab-' + tab).style.display = 'block';
+
+            // Poner clase activa al botón clickeado
+            if (tab === 'modelos') btnModelos.classList.add('active');
+            if (tab === 'subtipos') btnSubtipos.classList.add('active');
+            if (tab === 'marcas') btnMarcas.classList.add('active');
+        }
+
+        function filtrarTabla(inputId, tablaId) {
+            var input, filter, table, tr, tds, i, txtValue;
+            input = document.getElementById(inputId);
+            filter = input.value.toUpperCase();
+            table = document.getElementById(tablaId);
+            tr = table.getElementsByTagName("tr");
+
+            // Iterar sobre las filas de la tabla (empezando en 1 para omitir el <thead>)
+            for (i = 1; i < tr.length; i++) {
+                tr[i].style.display = "none"; // Oculta la fila por defecto
+                tds = tr[i].getElementsByTagName("td");
+                for (var j = 0; j < tds.length; j++) {
+                    if (tds[j]) {
+                        txtValue = tds[j].textContent || tds[j].innerText;
+                        // Si el texto de esta celda coincide con el filtro, muestra toda la fila
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                            break; // Match encontrado, detener búsqueda en las demás columnas
+                        }
+                    }
+                }
+            }
+        }
+        // ----------------------------------------------
+        function switchTabConfig(tab) {
+            const btnAgregar = document.getElementById('btn-tab-agregar');
+            const btnEliminar = document.getElementById('btn-tab-eliminar');
+            const zonaAgregar = document.getElementById('zona-agregar');
+            const zonaEliminar = document.getElementById('zona-eliminar');
+
+            btnAgregar.classList.remove('active');
+            btnEliminar.classList.remove('active');
+
+            if (tab === 'agregar') {
+                zonaAgregar.style.display = 'block';
+                zonaEliminar.style.display = 'none';
+                btnAgregar.classList.add('active');
+            } else {
+                zonaAgregar.style.display = 'none';
+                zonaEliminar.style.display = 'block';
+                btnEliminar.classList.add('active');
+            }
+        }
+
+        function editModel(id, nombreActual) {
+            Swal.fire({
+                title: 'Editar Modelo',
+                html: `Modificando registro actual: <b>${nombreActual}</b>`,
+                input: 'text',
+                inputValue: nombreActual,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#3498db',
+                cancelButtonColor: '#95a5a6',
+                confirmButtonText: '<i class="fas fa-save"></i> Guardar Cambios',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value || value.trim() === '') {
+                        return 'El nombre no puede estar vacío.'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitEditForm("{{ url_for('editar_modelo', id=0) }}".replace('0', id), result.value);
+                }
+            });
+        }
+
+        function editSubtype(id, nombreActual) {
+            Swal.fire({
+                title: 'Editar Subtipo',
+                html: `Modificando registro actual: <b>${nombreActual}</b>`,
+                input: 'text',
+                inputValue: nombreActual,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#9b59b6',
+                cancelButtonColor: '#95a5a6',
+                confirmButtonText: '<i class="fas fa-save"></i> Guardar Cambios',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value || value.trim() === '') {
+                        return 'El nombre no puede estar vacío.'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitEditForm("{{ url_for('editar_subtipo', id=0) }}".replace('0', id), result.value);
+                }
+            });
+        }
+
+        function editBrand(id, nombreActual) {
+            Swal.fire({
+                title: 'Editar Marca',
+                html: `Modificando registro actual: <b>${nombreActual}</b>`,
+                input: 'text',
+                inputValue: nombreActual,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#27ae60',
+                cancelButtonColor: '#95a5a6',
+                confirmButtonText: '<i class="fas fa-save"></i> Guardar Cambios',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (value) => {
+                    if (!value || value.trim() === '') {
+                        return 'El nombre no puede estar vacío.'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    submitEditForm("{{ url_for('editar_marca', id=0) }}".replace('0', id), result.value);
+                }
+            });
+        }
+
+        function submitEditForm(actionUrl, newName) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = actionUrl;
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'nuevo_nombre';
+            input.value = newName;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
+
+    <!-- INTERCEPTOR GLOBAL DE MENSAJES FLASH PARA SWEETALERT2 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for category, message in messages %}
+
+            let messageBody = {{ message| tojson | safe
+        }};
+
+        {% if category == 'error' or category == 'danger' %}
+        Swal.fire({
+            title: 'Error',
+            html: messageBody,
+            icon: 'error',
+            confirmButtonColor: '#e74c3c',
+            confirmButtonText: 'Entendido'
+        });
+        {% elif category == 'warning' %}
+        Swal.fire({
+            title: 'Advertencia',
+            html: messageBody,
+            icon: 'warning',
+            confirmButtonColor: '#f39c12',
+            confirmButtonText: 'Entendido'
+        });
+        {% elif category == 'info' %}
+        Swal.fire({
+            title: 'Información',
+            html: messageBody,
+            icon: 'info',
+            confirmButtonColor: '#3498db',
+            confirmButtonText: 'Entendido'
+        });
+        {% else %}
+        Swal.fire({
+            title: '¡Éxito!',
+            html: messageBody,
+            icon: 'success',
+            confirmButtonColor: '#27ae60',
+            confirmButtonText: 'Excelente'
+        });
+        {% endif %}
+
+        {% endfor %}
+        });
+    </script>
+    {% endif %}
+    {% endwith %}
+
+</body>
+
+</html>
