@@ -1,1 +1,59 @@
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
 
+<button class="menu-trigger" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+</button>
+
+<aside class="sidebar no-print" id="mainSidebar">
+    <div style="flex: 1 0 auto;">
+        <div class="sidebar-header">
+            <img src="{{ url_for('static', filename='img/SIRCOV2.png') }}" alt="Logo SIRCOV">
+        </div>
+
+        <div class="user-active-display">
+            <span>Usuario Activo</span>
+            <div class="pulse-wrapper">
+                <div class="pulse-dot">
+                    <div class="pulse-ring"></div>
+                </div>
+                <strong>{{ session.get('usuario', 'invitado') }}</strong>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="{{ url_for('panel') }}" class="{{ 'active' if active_page == 'inicio' else '' }}"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="{{ url_for('usuarios.gestion_usuarios') }}" class="{{ 'active' if active_page == 'usuarios' else '' }}"><i class="fas fa-users"></i> Gestión de Usuario</a></li>
+                <li><a href="{{ url_for('flota.gestion_flota') }}" class="{{ 'active' if active_page == 'flota' else '' }}"><i class="fas fa-car"></i> Flota vehicular</a></li>
+                <li><a href="{{ url_for('operadores.index') }}" class="{{ 'active' if active_page == 'operadores' else '' }}"><i class="fas fa-hard-hat"></i> Operadores</a></li>
+                <li><a href="{{ url_for('reportes.generar_reporte') }}" class="{{ 'active' if active_page == 'reportes' else '' }}"><i class="fas fa-chart-bar"></i> Reportes</a></li>
+                {% if session.rol == 'admin' %}
+                <li><a href="{{ url_for('configuracion') }}" class="{{ 'active' if active_page == 'configuracion' else '' }}"><i class="fas fa-cog"></i> Configuración</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('ayuda.index') }}" class="{{ 'active' if active_page == 'ayuda' else '' }}"><i class="fas fa-question-circle"></i> Ayuda</a></li>
+                <li><a href="{{ url_for('acerca_de.index') }}" class="{{ 'active' if active_page == 'acerca_de' else '' }}"><i class="fas fa-info-circle"></i> Acerca de</a></li>
+            </ul>
+        </nav>
+    </div>
+    <div class="sidebar-footer">
+        <a href="{{ url_for('logout') }}" class="btn-logout-visual">Cerrar Sesión</a>
+    </div>
+</aside>
+
+<script>
+    // Lógica Centralizada del Menú Lateral (Mobile-First)
+    function toggleSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const overlay = document.getElementById('overlay');
+        
+        sidebar.classList.toggle('active');
+        
+        if (sidebar.classList.contains('active')) {
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevenir scroll de fondo en móviles
+        } else {
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+</script>
